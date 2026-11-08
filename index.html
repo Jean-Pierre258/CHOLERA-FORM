@@ -1,0 +1,411 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NASHO HC - Cholera Investigation</title>
+
+<!-- PDF generator -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{
+ margin:0;background:#f1f5f9;
+ font-family:Arial,sans-serif;color:#1e293b
+}
+header{
+ background:#07549b;color:white;
+ padding:22px;text-align:center
+}
+header h2{margin:0 0 8px}
+.container{max-width:1000px;margin:20px auto;padding:12px}
+.status{
+ display:flex;justify-content:space-between;
+ flex-wrap:wrap;gap:10px;
+ background:white;padding:15px;border-radius:9px;
+ margin-bottom:15px
+}
+.card{
+ background:white;padding:20px;
+ border-radius:10px;margin-bottom:18px;
+ box-shadow:0 2px 8px #00000010
+}
+h3{color:#07549b;border-bottom:2px solid #e2e8f0;padding-bottom:10px}
+.grid{
+ display:grid;grid-template-columns:1fr 1fr;gap:15px
+}
+.field{margin-bottom:8px}
+.full{grid-column:1/-1}
+label{display:block;font-weight:bold;font-size:13px;margin-bottom:6px}
+input,select,textarea{
+ width:100%;padding:11px;border:1px solid #cbd5e1;
+ border-radius:6px;font-size:14px
+}
+textarea{min-height:75px}
+button{
+ border:0;padding:12px 18px;border-radius:6px;
+ background:#07549b;color:white;font-weight:bold;
+ cursor:pointer;margin:4px
+}
+button:disabled{opacity:.5}
+.secondary{background:#475569}
+.green{background:#16803c}
+.orange{background:#c56b0b}
+.subheading{
+ grid-column:1/-1;background:#eaf3fb;
+ padding:11px;font-weight:bold;color:#07549b
+}
+#message{padding:12px;margin-top:12px;border-radius:6px}
+@media(max-width:650px){
+ .grid{grid-template-columns:1fr}
+ .full,.subheading{grid-column:1}
+ .container{padding:8px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>NASHO HEALTH CENTER</h2>
+<div>ANNEX 11B: CHOLERA CASE-BASED INVESTIGATION FORM</div>
+</header>
+
+<div class="container">
+
+<div class="status">
+ <span id="connection">Checking connection...</span>
+ <span>Pending Sync: <b id="pending">0</b></span>
+ <span>Saved Cases: <b id="total">0</b></span>
+</div>
+
+<form id="caseForm">
+
+<div class="card">
+<h3>AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION</h3>
+<div class="grid" id="areaA"></div>
+</div>
+
+<div class="card">
+<h3>AREA B: RISK FACTOR SEARCH</h3>
+<div class="grid" id="areaB"></div>
+</div>
+
+<div class="card">
+<button type="submit" id="submitBtn">SAVE INVESTIGATION</button>
+<button type="button" class="green" onclick="syncCases()">SYNC ONLINE</button>
+<button type="button" class="secondary" onclick="downloadCases()">EXPORT DATA JSON</button>
+<div id="message"></div>
+</div>
+
+</form>
+</div>
+
+<script>
+// CONFIGURATION
+const CONFIG={
+ API_URL:"PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE",
+ FACILITY:"NASHO HEALTH CENTER",
+ MANAGER:"datamanager.nashohc@gmail.com"
+};
+
+// FORM QUESTIONS: based on supplied ANNEX 11B
+const A=[
+["1","Detection day (dd/mm/yyyy)","date","detection_day",1],
+["2","Detection place","select","detection_place",1,["Health facility","Community"]],
+["3","Patient identification number (yyyy-week-CCC-PPP-DDD-Reporting site-nnn)","text","patient_id",1],
+["4","Patient surname or last name","text","surname",1],
+["5","Patient first name(s)","text","first_names",1],
+["6","Age (years)","number","age",1],
+["7","Sex (F/M)","select","sex",1,["F","M"]],
+["8","Number of people in same household","number","household"],
+["9","Patient's residential Address","textarea","address"],
+["10","Village/Town","text","village"],
+["11","Neighbourhood","text","neighbourhood"],
+["12","District","text","district"],
+["13","Region/Province","text","province"],
+["14","Country","text","country"],
+["15","Date of onset (first symptoms)","date","onset_date"],
+["16","Clinical signs and Symptoms","textarea","symptoms"],
+["17","Was patient exposed to any known risk factor?","select","risk_factor",0,["Yes","No"]],
+["18","Water used for drinking / specify risk factors","textarea","water_risk"],
+["19","Number of doses of cholera vaccine","number","vaccine_doses"],
+["20","Date last dose was administered","date","last_vaccine"],
+["21","Laboratory related information: at least first and last cases","textarea","lab_information"],
+["22","Vibrio cholerae identified in stools?","select","vibrio",0,["Yes","No","Pending","Not done"]],
+["23","Drugs to which the vibrio strain is sensitive","textarea","sensitive"],
+["24","Drugs to which the vibrio strain is resistant","textarea","resistant"],
+["25","Outcome","select","outcome",0,["Died","Survived","Unknown"]],
+["26","Final Classification","select","classification",0,["Not a case","Suspect","Probable","Confirmed by Lab","Confirmed by epidemiological link","Pending"]],
+["27","Other Notes and Observations","textarea","notes"],
+["28","Date latest update of this record","date","latest_update"]
+];
+
+const B=[
+["1","Potential vibrio vehicles: drinking water","heading",""],
+["2","Drinking water source 1","text","drink1"],
+["3","Drinking water source 2","text","drink2"],
+["4","Drinking water source 3","text","drink3"],
+["5","Drinking water source 4","text","drink4"],
+["6","Potential vibrio vehicles: non-drinking water","heading",""],
+["7","Non-drinking water source 1","text","nondrink1"],
+["8","Non-drinking water source 2","text","nondrink2"],
+["9","Non-drinking water source 3","text","nondrink3"],
+["10","Non-drinking water source 4","text","nondrink4"],
+["11","Potential vibrio vehicles: Food items","heading",""],
+["12","Food items 1","text","food1"],
+["13","Food items 2","text","food2"],
+["14","Food items 3","text","food3"],
+["15","Food items 4","text","food4"],
+["16","Food items 5","text","food5"],
+["17","Food items 6","text","food6"],
+["18","Food items 7","text","food7"],
+["19","Food items 8","text","food8"],
+["20","Bacteriology lab findings","textarea","bacteriology"],
+["21","Drinking water found infected by vibrio","select","infected_drink",0,["Yes","No","Pending","Not tested"]],
+["22","Non-drinking water found infected by vibrio","select","infected_nondrink",0,["Yes","No","Pending","Not tested"]],
+["23","Food items found infected by vibrio","textarea","infected_food"],
+["24","Looking out for Exposure to the identified hazards","heading",""],
+["25","Water used by patient for drinking: list by type","textarea","patient_water"],
+["26","Within 3 days prior to onset, did patient drink from:","heading",""],
+["27","Water source 2 (Yes/No)","select","exposure_water2",0,["Yes","No","Unknown"]],
+["28","Water source 3 (Yes/No)","select","exposure_water3",0,["Yes","No","Unknown"]],
+["29","Water source 4 (Yes/No)","select","exposure_water4",0,["Yes","No","Unknown"]],
+["30","Water source 5 (Yes/No)","select","exposure_water5",0,["Yes","No","Unknown"]],
+["31","Within 3 days prior to onset, did patient eat:","heading",""],
+["32","Food item 1 (Yes/No)","select","exposure_food1",0,["Yes","No","Unknown"]],
+["33","Food item 2 (Yes/No)","select","exposure_food2",0,["Yes","No","Unknown"]],
+["34","Food item 3 (Yes/No)","select","exposure_food3",0,["Yes","No","Unknown"]],
+["35","Food item 4 (Yes/No)","select","exposure_food4",0,["Yes","No","Unknown"]],
+["36","Food item 5 (Yes/No)","select","exposure_food5",0,["Yes","No","Unknown"]],
+["37","Within 3 days prior to onset, did patient attend any:","heading",""],
+["38","Funerals (Yes/No)","select","funeral",0,["Yes","No","Unknown"]],
+["39","Other social event (Yes/No)","select","social_event",0,["Yes","No","Unknown"]]
+];
+
+// IndexedDB
+let db;
+const request=indexedDB.open("NashoCholeraDB",1);
+
+request.onupgradeneeded=e=>{
+ const database=e.target.result;
+ if(!database.objectStoreNames.contains("cases")){
+  database.createObjectStore("cases",{keyPath:"id"});
+ }
+};
+
+request.onsuccess=e=>{
+ db=e.target.result;
+ refreshStats();
+ syncCases();
+};
+
+request.onerror=()=>showMessage("Unable to open local database.","error");
+
+// RENDER FORM
+function renderFields(list,target){
+ const root=document.getElementById(target);
+ list.forEach(f=>{
+  if(f[2]==="heading"){
+   const h=document.createElement("div");
+   h.className="subheading";
+   h.textContent=f[0]+". "+f[1];
+   root.appendChild(h);
+   return;
+  }
+
+  const box=document.createElement("div");
+  box.className="field"+(f[2]==="textarea"?" full":"");
+
+  const label=document.createElement("label");
+  label.textContent=f[0]+". "+f[1]+(f[4]?" *":"");
+  box.appendChild(label);
+
+  let el;
+  if(f[2]==="textarea"){
+   el=document.createElement("textarea");
+  }else if(f[2]==="select"){
+   el=document.createElement("select");
+   const blank=new Option("-- Select --","");
+   el.add(blank);
+   f[5].forEach(x=>el.add(new Option(x,x)));
+  }else{
+   el=document.createElement("input");
+   el.type=f[2];
+   if(f[2]==="number")el.min="0";
+  }
+
+  el.name=f[3];
+  if(f[4])el.required=true;
+  box.appendChild(el);
+  root.appendChild(box);
+ });
+}
+
+renderFields(A,"areaA");
+renderFields(B,"areaB");
+
+// DATABASE FUNCTIONS
+function transaction(mode,callback){
+ return db.transaction("cases",mode).objectStore("cases");
+}
+
+function getAll(){
+ return new Promise((resolve,reject)=>{
+  const req=transaction("readonly").getAll();
+  req.onsuccess=()=>resolve(req.result||[]);
+  req.onerror=()=>reject(req.error);
+ });
+}
+
+function saveLocal(data){
+ return new Promise((resolve,reject)=>{
+  const req=transaction("readwrite").put(data);
+  req.onsuccess=()=>resolve();
+  req.onerror=()=>reject(req.error);
+ });
+}
+
+async function refreshStats(){
+ if(!db)return;
+ const cases=await getAll();
+ document.getElementById("total").textContent=cases.length;
+ document.getElementById("pending").textContent=
+ cases.filter(x=>!x.synced).length;
+ updateConnection();
+}
+
+function updateConnection(){
+ document.getElementById("connection").textContent=
+ navigator.onLine?"ONLINE":"OFFLINE";
+}
+
+window.addEventListener("online",()=>{
+ updateConnection();
+ syncCases();
+});
+window.addEventListener("offline",updateConnection);
+
+// SUBMIT FORM
+document.getElementById("caseForm").addEventListener("submit",async e=>{
+ e.preventDefault();
+ if(!db)return showMessage("Database is still loading.","error");
+
+ const data=Object.fromEntries(new FormData(e.target).entries());
+ const id="CHOL-"+Date.now()+"-"+Math.floor(Math.random()*10000);
+
+ const record={
+  id,
+  facility:CONFIG.FACILITY,
+  submittedAt:new Date().toISOString(),
+  answers:data,
+  synced:false
+ };
+
+ try{
+  await saveLocal(record);
+  await refreshStats();
+  createPDF(record);
+  showMessage("Saved successfully. Case ID: "+id+
+  ". PDF generated. "+(navigator.onLine?" Syncing...":"Stored offline until internet returns."));
+  e.target.reset();
+  if(navigator.onLine)syncCases();
+ }catch(err){
+  showMessage("Could not save: "+err.message,"error");
+ }
+});
+
+// PDF
+function createPDF(record){
+ if(!window.jspdf){
+  showMessage("PDF library unavailable. Reconnect to internet to load it.","error");
+  return;
+ }
+
+ const {jsPDF}=window.jspdf;
+ const doc=new jsPDF({orientation:"portrait"});
+ const ans=record.answers;
+
+ doc.setFontSize(14);
+ doc.text("ANNEX 11B: Cholera Case-Based Investigation Form",105,15,{align:"center"});
+ doc.setFontSize(10);
+ doc.text(CONFIG.FACILITY,105,22,{align:"center"});
+ doc.text("Document ID: "+record.id,14,31);
+ doc.text("Submitted: "+new Date(record.submittedAt).toLocaleString(),14,37);
+
+ function table(title,fields,startY){
+  doc.setFontSize(12);
+  doc.text(title,14,startY);
+  const rows=fields.filter(f=>f[2]!=="heading").map(f=>[
+   f[0],f[1],ans[f[3]]||"Not provided"
+  ]);
+  doc.autoTable({
+   startY:startY+5,
+   head:[["No.","Variables / Questions","Answers"]],
+   body:rows,
+   theme:"grid",
+   styles:{fontSize:7,cellPadding:2,overflow:"linebreak"},
+   headStyles:{fillColor:[7,84,155]}
+  });
+ }
+
+ table("AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION",A,45);
+ doc.addPage();
+ table("AREA B: RISK FACTOR SEARCH",B,18);
+
+ doc.save(record.id+".pdf");
+}
+
+// SYNCHRONIZATION
+async function syncCases(){
+ if(!db || !navigator.onLine)return;
+ if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_YOUR")){
+  updateConnection();
+  return;
+ }
+
+ const cases=await getAll();
+ for(const record of cases){
+  if(record.synced)continue;
+  try{
+   const response=await fetch(CONFIG.API_URL,{
+    method:"POST",
+    headers:{"Content-Type":"text/plain;charset=utf-8"},
+    body:JSON.stringify(record)
+   });
+   const result=await response.json();
+   if(result.success){
+    record.synced=true;
+    await saveLocal(record);
+   }
+  }catch(err){
+   console.error("Sync failed:",err);
+   break;
+  }
+ }
+ await refreshStats();
+}
+
+function downloadCases(){
+ getAll().then(cases=>{
+  const blob=new Blob([JSON.stringify(cases,null,2)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="NASHO_CHOLERA_BACKUP.json";
+  a.click();
+  URL.revokeObjectURL(a.href);
+ });
+}
+
+function showMessage(message,type="success"){
+ const box=document.getElementById("message");
+ box.textContent=message;
+ box.style.background=type==="error"?"#fee2e2":"#dcfce7";
+ box.style.color=type==="error"?"#991b1b":"#166534";
+}
+</script>
+</body>
+</html>
