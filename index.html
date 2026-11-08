@@ -104,7 +104,9 @@ footer{text-align:center;color:#687887;font-size:12px;padding:25px}
 </div>
 
 <div class="card no-print">
-<button class="success" type="submit" id="submitBtn">Save Patient & Generate Both PDFs</button>
+<button class="success" type="submit" id="submitBtn">
+SUBMIT PATIENT REPORT
+</button>
 <button class="secondary" type="button" onclick="clearForm()">Clear Form</button>
 </div>
 
@@ -658,6 +660,7 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
 
  const submitBtn=document.getElementById("submitBtn");
  submitBtn.disabled=true;
+ submitBtn.textContent="SUBMITTING...";
 
  try{
 
@@ -668,6 +671,9 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
   ).trim();
 
   const caseId="NASHO-"+Date.now();
+
+  // GENERATE BOTH PDFs IN MEMORY ONLY
+  // NO AUTOMATIC DOWNLOAD
 
   const annexPdf=makePdf(
    "ANNEX 11B: CHOLERA CASE-BASED INVESTIGATION FORM",
@@ -709,64 +715,57 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
 
    caseId,
    patientName,
-
    patientId:record.patient.patientId,
-
    disease:record.idsr.disease,
-
    consultationDate:record.idsr.consultationDate,
-
    dateOfOnset:record.idsr.symptomOnset,
-
    gender:record.patient.gender,
-
    phone:record.patient.phone,
-
    district:record.patient.district,
-
    sector:record.patient.sector,
-
    village:record.patient.village,
-
    status:"Pending synchronization",
-
    createdAt:new Date().toISOString(),
-
    record,
-
    annexPdf:dataUriToBase64(annexPdf),
-
    idsrPdf:dataUriToBase64(idsrPdf),
-
    annexFilename:cleanFilename(patientName)+"_ANNEX11B.pdf",
-
    idsrFilename:cleanFilename(patientName)+"_IDSR.pdf"
 
   };
 
-  // Save locally first
+  // SAVE LOCALLY FIRST
   await saveLocal(item);
 
-  // Download both PDF files
-  downloadPdf(item.annexPdf,item.annexFilename);
-  downloadPdf(item.idsrPdf,item.idsrFilename);
-
   showMessage(
-   "Patient report saved locally. Both PDFs generated. Synchronizing with Google Sheets...",
+   "Report saved. Synchronizing with NASHO server...",
    "good"
   );
 
   this.reset();
 
-  await syncCases();
+  // SYNCHRONIZE IF ONLINE
+  if(navigator.onLine){
+
+   await syncCases();
+
+  }else{
+
+   showMessage(
+    "Report saved offline. It will synchronize when internet returns. No PDF downloaded.",
+    "good"
+   );
+
+  }
 
  }catch(err){
 
-  showMessage("Error: "+err.message,"bad");
+  showMessage("Submission error: "+err.message,"bad");
 
  }finally{
 
   submitBtn.disabled=false;
+  submitBtn.textContent="SUBMIT PATIENT REPORT";
 
  }
 
@@ -782,7 +781,7 @@ async function syncCases(){
  }
 
  if(!navigator.onLine){
-  showMessage("Offline: reports are saved on this device. They will sync when internet returns.","bad");
+  showMessage("Offline: reports are saved on this device.","bad");
   return;
  }
 
@@ -852,6 +851,12 @@ async function syncCases(){
     item.annexPdfUrl=result.annex11B||"";
     item.idsrPdfUrl=result.idsrPdf||"";
 
+    item.annexDownload=result.annex11BDownload||"";
+    item.idsrDownload=result.idsrDownload||"";
+
+    item.emailSent=result.emailSent===true;
+    item.emailMessage=result.emailMessage||"";
+
     successCount++;
 
    }catch(err){
@@ -867,7 +872,8 @@ async function syncCases(){
 
   showMessage(
    "Synchronization completed. Successful: "+successCount+
-   ". Pending/failed: "+failCount+".",
+   ". Pending/failed: "+failCount+
+   ". Email delivery status is recorded by the server.",
    failCount?"bad":"good"
   );
 
@@ -905,16 +911,10 @@ function closeHistoryModal(){
 
 }
 
-/**
- * Verify password using Google Apps Script.
- * Then retrieve all reports from Google Sheets.
- */
 async function checkHistoryPassword(){
 
  const password=document.getElementById("historyPassword").value;
-
  const error=document.getElementById("passwordError");
-
  const unlockBtn=document.getElementById("unlockBtn");
 
  if(!password){
@@ -947,18 +947,14 @@ async function checkHistoryPassword(){
   const result=await response.json();
 
   if(!result.success){
-
    error.textContent=result.message||"Incorrect password.";
    return;
-
   }
 
   historyUnlocked=true;
-
   remoteReports=result.reports||[];
 
   closeHistoryModal();
-
   showPage("historyPage");
 
   document.getElementById("historySearch").value="";
@@ -983,9 +979,8 @@ async function checkHistoryPassword(){
 
 }
 
-/**
- * Refresh online reports.
- */
+/**************** REFRESH HISTORY ****************/
+
 async function refreshHistory(){
 
  if(!historyUnlocked)return;
@@ -1016,10 +1011,8 @@ async function refreshHistory(){
   const result=await response.json();
 
   if(!result.success){
-
    alert(result.message||"Unable to refresh reports.");
    return;
-
   }
 
   remoteReports=result.reports||[];
@@ -1036,9 +1029,8 @@ async function refreshHistory(){
 
 }
 
-/**
- * Lock history page.
- */
+/**************** LOCK HISTORY ****************/
+
 function lockHistory(){
 
  historyUnlocked=false;
@@ -1050,9 +1042,8 @@ function lockHistory(){
 
 }
 
-/**
- * Combine remote reports and local pending reports.
- */
+/**************** COMBINE REMOTE AND LOCAL HISTORY ****************/
+
 async function getHistoryRecords(){
 
  const localCases=await getAllCases();
@@ -1069,15 +1060,19 @@ async function getHistoryRecords(){
 
   submissionDate:r.submissionDate||"",
 
-  disease:(r.record&&r.record.idsr&&r.record.idsr.disease)||"",
+  disease:r.disease||"",
 
-  district:(r.record&&r.record.patient&&r.record.patient.district)||"",
+  district:r.district||"",
 
   status:r.status||"SUBMITTED",
 
   annex11B:r.annex11B||"",
 
   idsrPdf:r.idsrPdf||"",
+
+  annexDownload:r.annex11BDownload||"",
+
+  idsrDownload:r.idsrDownload||"",
 
   record:r.record||{}
 
@@ -1111,6 +1106,10 @@ async function getHistoryRecords(){
 
     idsrPdf:"",
 
+    annexDownload:"",
+
+    idsrDownload:"",
+
     localAnnex:c.annexPdf||"",
 
     localIdsr:c.idsrPdf||"",
@@ -1131,9 +1130,8 @@ async function getHistoryRecords(){
 
 }
 
-/**
- * Display all reports.
- */
+/**************** DISPLAY HISTORY ****************/
+
 async function renderHistory(){
 
  if(!historyUnlocked)return;
@@ -1153,19 +1151,14 @@ async function renderHistory(){
  const pendingCount=cases.filter(c=>c.source==="local").length;
 
  document.getElementById("totalReports").textContent=cases.length;
-
  document.getElementById("onlineReports").textContent=onlineCount;
-
  document.getElementById("pendingReports").textContent=pendingCount;
 
  const filtered=cases.filter(c=>
 
   (c.patientName||"").toLowerCase().includes(search)||
-
   (c.caseId||"").toLowerCase().includes(search)||
-
   (c.patientId||"").toLowerCase().includes(search)||
-
   (c.district||"").toLowerCase().includes(search)
 
  );
@@ -1173,9 +1166,7 @@ async function renderHistory(){
  if(!filtered.length){
 
   list.innerHTML=`
-   <div class="status">
-    No patient reports found.
-   </div>
+   <div class="status">No patient reports found.</div>
   `;
 
   return;
@@ -1215,25 +1206,49 @@ async function renderHistory(){
 
   if(c.source==="online"){
 
-   annexAction=c.annex11B
-    ? `<a href="${escapeHtml(c.annex11B)}" target="_blank" rel="noopener">Open ANNEX 11B</a>`
-    : `<span class="small">ANNEX PDF unavailable</span>`;
+   annexAction=`
 
-   idsrAction=c.idsrPdf
-    ? `<a href="${escapeHtml(c.idsrPdf)}" target="_blank" rel="noopener">Open IDSR</a>`
-    : `<span class="small">IDSR PDF unavailable</span>`;
+    <a href="${escapeHtml(c.annex11B||"#")}"
+       target="_blank"
+       rel="noopener">OPEN ANNEX 11B</a>
+
+    ${c.annexDownload?`
+     <a href="${escapeHtml(c.annexDownload)}"
+        target="_blank"
+        rel="noopener">DOWNLOAD</a>
+    `:""}
+
+   `;
+
+   idsrAction=`
+
+    <a href="${escapeHtml(c.idsrPdf||"#")}"
+       target="_blank"
+       rel="noopener">OPEN IDSR</a>
+
+    ${c.idsrDownload?`
+     <a href="${escapeHtml(c.idsrDownload)}"
+        target="_blank"
+        rel="noopener">DOWNLOAD</a>
+    `:""}
+
+   `;
 
   }else{
 
    annexAction=`
-    <button class="primary" onclick="historyPdf('${escapeHtml(c.caseId)}','annex')">
-     ANNEX 11B
-    </button>`;
+    <button class="primary"
+      onclick="historyPdf('${escapeHtml(c.caseId)}','annex')">
+      ANNEX 11B
+    </button>
+   `;
 
    idsrAction=`
-    <button class="secondary" onclick="historyPdf('${escapeHtml(c.caseId)}','idsr')">
-     IDSR
-    </button>`;
+    <button class="secondary"
+      onclick="historyPdf('${escapeHtml(c.caseId)}','idsr')">
+      IDSR
+    </button>
+   `;
 
   }
 
@@ -1275,9 +1290,8 @@ async function renderHistory(){
 
 }
 
-/**
- * Download locally stored PDFs.
- */
+/**************** DOWNLOAD LOCAL PDF FROM HISTORY ****************/
+
 async function historyPdf(caseId,type){
 
  const item=(await getAllCases()).find(c=>c.caseId===caseId);
@@ -1318,7 +1332,6 @@ function clearForm(){
 function showPage(id){
 
  document.getElementById("formPage").classList.add("hidden");
-
  document.getElementById("historyPage").classList.add("hidden");
 
  document.getElementById(id).classList.remove("hidden");
