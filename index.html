@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -10,49 +9,162 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
-:root{--blue:#123b5d;--green:#16834a;--red:#bd3434}
+:root{
+ --blue:#123b5d;
+ --green:#16834a;
+ --red:#bd3434;
+}
 *{box-sizing:border-box}
-body{margin:0;background:#f3f6f9;color:#203040;font-family:Arial,sans-serif}
-header{background:var(--blue);color:white;padding:20px}
+body{
+ margin:0;
+ background:#f3f6f9;
+ color:#203040;
+ font-family:Arial,sans-serif;
+}
+header{
+ background:var(--blue);
+ color:white;
+ padding:20px;
+}
 header h1{margin:0;font-size:22px}
 header p{margin:7px 0 0}
 .container{max-width:1200px;margin:20px auto;padding:0 14px}
 .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-button{border:0;border-radius:6px;padding:11px 16px;cursor:pointer;font-weight:bold}
+button{
+ border:0;
+ border-radius:6px;
+ padding:11px 16px;
+ cursor:pointer;
+ font-weight:bold;
+}
 button:disabled{opacity:.6;cursor:wait}
 .primary{background:var(--blue);color:white}
 .success{background:var(--green);color:white}
 .secondary{background:#dce7ef;color:#17364d}
 .danger{background:var(--red);color:white}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 8px #0000000c}
+.card{
+ background:white;
+ padding:20px;
+ border-radius:10px;
+ margin-bottom:16px;
+ box-shadow:0 2px 8px #0000000c;
+}
 h2{color:var(--blue);font-size:19px}
-h3{color:#24516e;font-size:16px;border-bottom:1px solid #dce5eb;padding-bottom:8px}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
-.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:5px}
-.field input,.field select,.field textarea{width:100%;padding:10px;border:1px solid #cbd5df;border-radius:6px;background:white}
+h3{
+ color:#24516e;
+ font-size:16px;
+ border-bottom:1px solid #dce5eb;
+ padding-bottom:8px;
+}
+.grid{
+ display:grid;
+ grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:13px;
+}
+.field label{
+ display:block;
+ font-size:13px;
+ font-weight:bold;
+ margin-bottom:5px;
+}
+.field input,.field select,.field textarea{
+ width:100%;
+ padding:10px;
+ border:1px solid #cbd5df;
+ border-radius:6px;
+ background:white;
+}
 .field textarea{min-height:70px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{
+ outline:2px solid #8bb7d4;
+ border-color:var(--blue);
+}
+.field input:invalid,.field select:invalid,.field textarea:invalid{
+ border-color:#bd3434;
+}
 .full{grid-column:1/-1}
 .small{font-size:12px;color:#657788}
 .hidden{display:none!important}
-.status{padding:10px;border-radius:6px;margin:10px 0;background:#edf4f8}
+.status{
+ padding:10px;
+ border-radius:6px;
+ margin:10px 0;
+ background:#edf4f8;
+}
 .good{background:#e5f5eb;color:#17683b}
 .bad{background:#ffeded;color:#9b2424}
+.warning{background:#fff5dc;color:#805700}
 table{width:100%;border-collapse:collapse;min-width:850px}
-th,td{padding:9px;border-bottom:1px solid #e1e7ec;text-align:left;font-size:13px;vertical-align:top}
+th,td{
+ padding:9px;
+ border-bottom:1px solid #e1e7ec;
+ text-align:left;
+ font-size:13px;
+ vertical-align:top;
+}
 th{background:#edf3f7}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
 .actions a{font-size:12px;font-weight:bold;color:#123b5d}
-.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:15px;z-index:10}
-.modalbox{background:white;border-radius:10px;padding:22px;width:100%;max-width:400px}
-.modalbox input{width:100%;padding:12px;margin:12px 0;border:1px solid #bbb;border-radius:6px}
+.modal{
+ position:fixed;
+ inset:0;
+ background:#0009;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ padding:15px;
+ z-index:100;
+}
+.modalbox{
+ background:white;
+ border-radius:12px;
+ padding:24px;
+ width:100%;
+ max-width:420px;
+ box-shadow:0 12px 40px #0003;
+}
+.modalbox input{
+ width:100%;
+ padding:12px;
+ margin:12px 0;
+ border:1px solid #bbb;
+ border-radius:6px;
+}
+.modal-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.success-icon{
+ width:64px;
+ height:64px;
+ border-radius:50%;
+ background:#e5f5eb;
+ color:#16834a;
+ display:flex;
+ align-items:center;
+ justify-content:center;
+ font-size:38px;
+ font-weight:bold;
+ margin:0 auto 14px;
+}
+.success-modal{text-align:center}
+.success-modal h2{color:#16834a}
 footer{text-align:center;color:#687887;font-size:12px;padding:25px}
-.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.summary{
+ display:grid;
+ grid-template-columns:repeat(3,1fr);
+ gap:10px;
+ margin:12px 0;
+}
 .summary div{background:#edf3f7;padding:14px;border-radius:8px}
-.summary strong{display:block;font-size:22px;color:var(--blue)}
+.summary strong{
+ display:block;
+ font-size:22px;
+ color:var(--blue);
+}
+.required-note{color:#bd3434;font-weight:bold}
 @media(max-width:650px){
  .grid{grid-template-columns:1fr}
  .full{grid-column:auto}
  .summary{grid-template-columns:1fr}
+ .card{padding:15px}
 }
 @media print{.no-print{display:none!important}}
 </style>
@@ -61,124 +173,153 @@ footer{text-align:center;color:#687887;font-size:12px;padding:25px}
 <body>
 
 <header>
-<h1>NASHO HEALTH CENTER</h1>
-<p>Cholera Case-Based Investigation & IDSR Immediate Report System</p>
+ <h1>NASHO HEALTH CENTER</h1>
+ <p>Cholera Case-Based Investigation & IDSR Immediate Report System</p>
 </header>
 
 <div class="container">
 
-<div class="nav no-print">
-<button class="primary" onclick="showPage('formPage')">New Patient Report</button>
-<button class="secondary" onclick="openHistory()">My History</button>
-<button class="secondary" onclick="syncCases()">Synchronize Online</button>
-</div>
+ <div class="nav no-print">
+  <button class="primary" onclick="showPage('formPage')">New Patient Report</button>
+  <button class="secondary" onclick="openHistory()">My History</button>
+  <button class="secondary" onclick="syncCases()">Synchronize Online</button>
+ </div>
 
-<div id="message" class="status">System starting...</div>
+ <div id="message" class="status">System starting...</div>
 
-<!-- NEW REPORT PAGE -->
-<section id="formPage">
+ <!-- NEW REPORT PAGE -->
+ <section id="formPage">
 
-<form id="caseForm">
+  <form id="caseForm">
 
-<div class="card">
-<h2>Patient Identification</h2>
-<p class="small">Fields marked * are required. All entered information will be submitted.</p>
-<div id="patientFields" class="grid"></div>
-</div>
+   <div class="card">
+    <h2>Patient Identification</h2>
+    <p class="small">Fields marked <span class="required-note">*</span> are required. All entered information will appear in the PDF reports.</p>
+    <div id="patientFields" class="grid"></div>
+   </div>
 
-<div class="card">
-<h2>IDSR Immediate Report Form</h2>
-<div id="idsrFields" class="grid"></div>
-</div>
+   <div class="card">
+    <h2>IDSR Immediate Report Form</h2>
+    <div id="idsrFields" class="grid"></div>
+   </div>
 
-<div class="card">
-<h2>ANNEX 11B - Area A</h2>
-<h3>Patient and clinical laboratory related information</h3>
-<div id="annexAFields" class="grid"></div>
-</div>
+   <div class="card">
+    <h2>ANNEX 11B - Area A</h2>
+    <h3>Patient and clinical laboratory related information</h3>
+    <div id="annexAFields" class="grid"></div>
+   </div>
 
-<div class="card">
-<h2>ANNEX 11B - Area B</h2>
-<h3>Risk factor search - Mapping potential hazards</h3>
-<div id="annexBFields" class="grid"></div>
-</div>
+   <div class="card">
+    <h2>ANNEX 11B - Area B</h2>
+    <h3>Risk factor search - Mapping potential hazards</h3>
+    <div id="annexBFields" class="grid"></div>
+   </div>
 
-<div class="card no-print">
-<button class="success" type="submit" id="submitBtn">
-SUBMIT PATIENT REPORT
-</button>
-<button class="secondary" type="button" onclick="clearForm()">Clear Form</button>
-</div>
+   <div class="card no-print">
+    <button class="success" type="submit" id="submitBtn">
+     SUBMIT PATIENT REPORT
+    </button>
+    <button class="secondary" type="button" onclick="clearForm()">
+     Clear Form
+    </button>
+   </div>
 
-</form>
-</section>
+  </form>
+ </section>
 
-<!-- HISTORY PAGE -->
-<section id="historyPage" class="hidden">
+ <!-- HISTORY PAGE -->
+ <section id="historyPage" class="hidden">
+  <div class="card">
 
-<div class="card">
+   <h2>My History</h2>
 
-<h2>My History</h2>
+   <p class="small">
+    All patient reports submitted to NASHO HEALTH CENTER are displayed here,
+    including reports created on other computers.
+   </p>
 
-<p class="small">
-All patient reports submitted to NASHO HEALTH CENTER are displayed here,
-including reports created on other computers.
-</p>
+   <div class="summary">
+    <div>
+     <strong id="totalReports">0</strong>
+     <span class="small">Total Reports</span>
+    </div>
+    <div>
+     <strong id="onlineReports">0</strong>
+     <span class="small">Online Reports</span>
+    </div>
+    <div>
+     <strong id="pendingReports">0</strong>
+     <span class="small">Pending Synchronization</span>
+    </div>
+   </div>
 
-<div class="summary">
-<div>
-<strong id="totalReports">0</strong>
-<span class="small">Total Reports</span>
-</div>
-<div>
-<strong id="onlineReports">0</strong>
-<span class="small">Online Reports</span>
-</div>
-<div>
-<strong id="pendingReports">0</strong>
-<span class="small">Pending Synchronization</span>
-</div>
-</div>
+   <input
+    id="historySearch"
+    placeholder="Search patient name, Patient ID, district or Case ID..."
+    oninput="renderHistory()"
+    style="padding:11px;width:100%;margin-bottom:12px;border:1px solid #ccd5dd;border-radius:6px"
+   >
 
-<input
- id="historySearch"
- placeholder="Search patient name, Patient ID, district or Case ID..."
- oninput="renderHistory()"
- style="padding:11px;width:100%;margin-bottom:12px;border:1px solid #ccd5dd;border-radius:6px"
->
+   <div id="historyList">
+    <p>Reports will appear here.</p>
+   </div>
 
-<div id="historyList">
-<p>Reports will appear here.</p>
-</div>
+   <div class="actions no-print" style="margin-top:15px">
+    <button class="secondary" onclick="refreshHistory()">Refresh History</button>
+    <button class="secondary" onclick="showPage('formPage')">Back to Form</button>
+    <button class="danger" onclick="lockHistory()">Lock History</button>
+   </div>
 
-<div class="actions no-print" style="margin-top:15px">
-<button class="secondary" onclick="refreshHistory()">Refresh History</button>
-<button class="secondary" onclick="showPage('formPage')">Back to Form</button>
-<button class="danger" onclick="lockHistory()">Lock History</button>
-</div>
-
-</div>
-</section>
+  </div>
+ </section>
 
 </div>
 
 <!-- PASSWORD MODAL -->
 <div id="passwordModal" class="modal hidden">
-<div class="modalbox">
+ <div class="modalbox">
 
-<h2>My History - Password</h2>
-<p>Enter the password to access all patient reports.</p>
+  <h2>My History - Password</h2>
+  <p>Enter the password to access all patient reports.</p>
 
-<input id="historyPassword" type="password" placeholder="Enter password">
+  <input id="historyPassword" type="password" placeholder="Enter password">
 
-<p id="passwordError" class="small" style="color:#bd3434"></p>
+  <p id="passwordError" class="small" style="color:#bd3434"></p>
 
-<div class="actions">
-<button class="primary" id="unlockBtn" onclick="checkHistoryPassword()">Unlock</button>
-<button class="secondary" onclick="closeHistoryModal()">Cancel</button>
+  <div class="modal-actions">
+   <button class="primary" id="unlockBtn" onclick="checkHistoryPassword()">Unlock</button>
+   <button class="secondary" onclick="closeHistoryModal()">Cancel</button>
+  </div>
+
+ </div>
 </div>
 
-</div>
+<!-- SUCCESS MODAL -->
+<div id="successModal" class="modal hidden">
+ <div class="modalbox success-modal">
+
+  <div class="success-icon">✓</div>
+
+  <h2>Report Submitted Successfully!</h2>
+
+  <p>
+   The patient report has been successfully submitted to
+   <b>NASHO HEALTH CENTER</b>.
+  </p>
+
+  <p class="small">
+   Your PDF reports are available in My History. Open My History to view,
+   download or print the ANNEX 11B and IDSR reports.
+  </p>
+
+  <p id="successCaseId" class="small"></p>
+
+  <div class="modal-actions" style="justify-content:center">
+   <button class="primary" onclick="successGoToHistory()">Go to My History</button>
+   <button class="secondary" onclick="closeSuccessModal()">Close</button>
+  </div>
+
+ </div>
 </div>
 
 <footer>NASHO HEALTH CENTER | Internal Reporting System</footer>
@@ -195,116 +336,118 @@ const STORE_NAME = "cases";
 let db;
 let historyUnlocked = false;
 let remoteReports = [];
+let lastSubmittedCaseId = "";
 
 /**************** PATIENT FIELDS ****************/
 
 const patientFields = [
-["firstName","Patient First Name","text",true],
-["lastName","Patient Last Name","text",true],
-["patientId","Patient I.D (ICD10)","text",false],
-["indexPatientId","Index Patient I.D (ICD10)","text",false],
-["dateOfBirth","Date of Birth","date",true],
-["ageYears","Age (Years)","number",true],
-["ageMonths","Age (Months)","number",false],
-["gender","Gender","select",true,["Male","Female","Other"]],
-["nationalId","National ID","text",false],
-["phone","Mobile Number","tel",false],
-["province","Province of Residence","text",true],
-["district","District of Residence","text",true],
-["sector","Sector of Residence","text",true],
-["village","Village of Residence","text",true],
-["occupation","Occupation","text",true],
-["fatherName","Parent/Guardian Names (Father)","text",false],
-["motherName","Parent/Guardian Names (Mother)","text",false],
-["guardianPhone","Parent/Guardian Phone Number","tel",false]
+ ["firstName","Patient First Name","text",true],
+ ["lastName","Patient Last Name","text",true],
+ ["patientId","Patient I.D (ICD10)","text",false],
+ ["indexPatientId","Index Patient I.D (ICD10)","text",false],
+ ["dateOfBirth","Date of Birth","date",true],
+ ["ageYears","Age (Years)","number",true],
+ ["ageMonths","Age (Months)","number",false],
+ ["gender","Gender","select",true,["Male","Female","Other"]],
+ ["nationalId","National ID","text",false],
+ ["phone","Mobile Number","tel",false],
+ ["province","Province of Residence","text",true],
+ ["district","District of Residence","text",true],
+ ["sector","Sector of Residence","text",true],
+ ["village","Village of Residence","text",true],
+ ["occupation","Occupation","text",true],
+ ["fatherName","Parent/Guardian Names (Father)","text",false],
+ ["motherName","Parent/Guardian Names (Mother)","text",false],
+ ["guardianPhone","Parent/Guardian Phone Number","tel",false]
 ];
 
 /**************** IDSR FIELDS ****************/
 
 const idsrFields = [
-["consultationDate","Date of Consultation","date",false],
-["disease","Disease","select",true,["Cholera","Acute watery diarrhoea","Other"]],
-["caseType","Type of Case (Contact/Case)?","select",true,["Case","Contact"]],
-["locationCoordinate","Location/Health Center Coordinate","text",false],
-["caseClassification","Case Classification","select",false,["Suspected","Probable","Confirmed","Not a case","Pending"]],
-["symptomOnset","Date of symptoms onset","date",false]
+ ["consultationDate","Date of Consultation","date",false],
+ ["disease","Disease","select",true,["Cholera","Acute watery diarrhoea","Other"]],
+ ["caseType","Type of Case (Contact/Case)?","select",true,["Case","Contact"]],
+ ["locationCoordinate","Location/Health Center Coordinate","text",false],
+ ["caseClassification","Case Classification","select",false,["Suspected","Probable","Confirmed","Not a case","Pending"]],
+ ["symptomOnset","Date of symptoms onset","date",false]
 ];
 
 /**************** ANNEX A FIELDS ****************/
+/* Required fields: a1, a2, a14, a15, a16 */
 
 const annexAFields = [
-["a1","1. Detection day (dd/mm/yyyy)","date"],
-["a2","2. Detection place","select",false,["Health facility","Community"]],
-["a3","3. Patient identification number","text"],
-["a4","4. Patient surname or last name","text"],
-["a5","5. Patient first name(s)","text"],
-["a6","6. Age (years)","number"],
-["a7","7. Sex (F/M)","select",false,["F","M"]],
-["a8","8. Number of people in same household","number"],
-["a9","9. Patient's residential address","text"],
-["a10","10. Village/Town","text"],
-["a11","11. Neighbourhood","text"],
-["a12","12. District","text"],
-["a13","13. Region/Province","text"],
-["a14","14. Country","text"],
-["a15","15. Date of onset (first symptoms)","date"],
-["a16","16. Clinical signs and symptoms","textarea"],
-["a17","17. Exposed to any known risk factor?","select",false,["Yes","No","Unknown"]],
-["a18","18. Water used for drinking / specify risk factors","textarea"],
-["a19","19. Number of doses of cholera vaccine","number"],
-["a20","20. Date last vaccine dose administered","date"],
-["a21","21. Laboratory related information / first and last cases","textarea"],
-["a22","22. Vibrio cholerae identified in stools?","select",false,["Yes","No","Pending","Not tested"]],
-["a23","23. Drugs to which vibrio strain is sensitive","textarea"],
-["a24","24. Drugs to which vibrio strain is resistant","textarea"],
-["a25","25. Outcome","select",false,["Died","Survived","Unknown"]],
-["a26","26. Final classification","select",false,["Not a case","Suspect","Probable","Confirmed by Lab","Confirmed by epidemiological link","Pending"]],
-["a27","27. Other notes and observations","textarea"],
-["a28","28. Date latest update of this record","date"]
+ ["a1","1. Detection day (dd/mm/yyyy)","date",true],
+ ["a2","2. Detection place","select",true,["Health facility","Community"]],
+ ["a3","3. Patient identification number","text",false],
+ ["a4","4. Patient surname or last name","text",false],
+ ["a5","5. Patient first name(s)","text",false],
+ ["a6","6. Age (years)","number",false],
+ ["a7","7. Sex (F/M)","select",false,["F","M"]],
+ ["a8","8. Number of people in same household","number",false],
+ ["a9","9. Patient's residential address","text",false],
+ ["a10","10. Village/Town","text",false],
+ ["a11","11. Neighbourhood","text",false],
+ ["a12","12. District","text",false],
+ ["a13","13. Region/Province","text",false],
+ ["a14","14. Country","text",true],
+ ["a15","15. Date of onset (first symptoms)","date",true],
+ ["a16","16. Clinical signs and symptoms","textarea",true],
+ ["a17","17. Exposed to any known risk factor?","select",false,["Yes","No","Unknown"]],
+ ["a18","18. Water used for drinking / specify risk factors","textarea",false],
+ ["a19","19. Number of doses of cholera vaccine","number",false],
+ ["a20","20. Date last vaccine dose administered","date",false],
+ ["a21","21. Laboratory related information / first and last cases","textarea",false],
+ ["a22","22. Vibrio cholerae identified in stools?","select",false,["Yes","No","Pending","Not tested"]],
+ ["a23","23. Drugs to which vibrio strain is sensitive","textarea",false],
+ ["a24","24. Drugs to which vibrio strain is resistant","textarea",false],
+ ["a25","25. Outcome","select",false,["Died","Survived","Unknown"]],
+ ["a26","26. Final classification","select",false,["Not a case","Suspect","Probable","Confirmed by Lab","Confirmed by epidemiological link","Pending"]],
+ ["a27","27. Other notes and observations","textarea",false],
+ ["a28","28. Date latest update of this record","date",false]
 ];
 
 /**************** ANNEX B FIELDS ****************/
 
 const annexBFields = [
-["b1","1. Potential vibrio vehicles: drinking water","textarea"],
-["b2","2. Drinking water source 1","text"],
-["b3","3. Drinking water source 2","text"],
-["b4","4. Drinking water source 3","text"],
-["b5","5. Drinking water source 4","text"],
-["b6","6. Potential vibrio vehicles: non-drinking water","textarea"],
-["b7","7. Non-drinking water source 1","text"],
-["b8","8. Non-drinking water source 2","text"],
-["b9","9. Non-drinking water source 3","text"],
-["b10","10. Non-drinking water source 4","text"],
-["b11","11. Potential vibrio vehicles: Food items","textarea"],
-["b12","12. Food item 1","text"],
-["b13","13. Food item 2","text"],
-["b14","14. Food item 3","text"],
-["b15","15. Food item 4","text"],
-["b16","16. Food item 5","text"],
-["b17","17. Food item 6","text"],
-["b18","18. Food item 7","text"],
-["b19","19. Food item 8","text"],
-["b20","20. Bacteriology lab findings","textarea"],
-["b21","21. Drinking water found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
-["b22","22. Non-drinking water found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
-["b23","23. Food items found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
-["b24","24. Looking out for exposure to identified hazards","textarea"],
-["b25","25. Water used by patient for drinking","textarea"],
-["b26","26. Within 3 days before onset - Water source 1","select",false,["Yes","No","Unknown"]],
-["b27","27. Within 3 days before onset - Water source 2","select",false,["Yes","No","Unknown"]],
-["b28","28. Within 3 days before onset - Water source 3","select",false,["Yes","No","Unknown"]],
-["b29","29. Within 3 days before onset - Water source 4","select",false,["Yes","No","Unknown"]],
-["b30","30. Within 3 days before onset - Water source 5","select",false,["Yes","No","Unknown"]],
-["b31","31. Within 3 days before onset - Food exposure details","textarea"],
-["b32","32. Ate food item 1 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
-["b33","33. Ate food item 2 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
-["b34","34. Ate food item 3 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
-["b35","35. Ate food item 4 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
-["b36","36. Ate food item 5 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
-["b37","37. Other food exposure / details","textarea"],
-["b38","38. Attended funerals within 3 days before onset?","select",false,["Yes","No","Unknown"]],
-["b39","39. Attended other social event within 3 days before onset?","select",false,["Yes","No","Unknown"]]
+ ["b1","1. Potential vibrio vehicles: drinking water","textarea",false],
+ ["b2","2. Drinking water source 1","text",false],
+ ["b3","3. Drinking water source 2","text",false],
+ ["b4","4. Drinking water source 3","text",false],
+ ["b5","5. Drinking water source 4","text",false],
+ ["b6","6. Potential vibrio vehicles: non-drinking water","textarea",false],
+ ["b7","7. Non-drinking water source 1","text",false],
+ ["b8","8. Non-drinking water source 2","text",false],
+ ["b9","9. Non-drinking water source 3","text",false],
+ ["b10","10. Non-drinking water source 4","text",false],
+ ["b11","11. Potential vibrio vehicles: Food items","textarea",false],
+ ["b12","12. Food item 1","text",false],
+ ["b13","13. Food item 2","text",false],
+ ["b14","14. Food item 3","text",false],
+ ["b15","15. Food item 4","text",false],
+ ["b16","16. Food item 5","text",false],
+ ["b17","17. Food item 6","text",false],
+ ["b18","18. Food item 7","text",false],
+ ["b19","19. Food item 8","text",false],
+ ["b20","20. Bacteriology lab findings","textarea",false],
+ ["b21","21. Drinking water found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
+ ["b22","22. Non-drinking water found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
+ ["b23","23. Food items found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
+ ["b24","24. Looking out for exposure to identified hazards","textarea",false],
+ ["b25","25. Water used by patient for drinking","textarea",false],
+ ["b26","26. Within 3 days before onset - Water source 1","select",false,["Yes","No","Unknown"]],
+ ["b27","27. Within 3 days before onset - Water source 2","select",false,["Yes","No","Unknown"]],
+ ["b28","28. Within 3 days before onset - Water source 3","select",false,["Yes","No","Unknown"]],
+ ["b29","29. Within 3 days before onset - Water source 4","select",false,["Yes","No","Unknown"]],
+ ["b30","30. Within 3 days before onset - Water source 5","select",false,["Yes","No","Unknown"]],
+ ["b31","31. Within 3 days before onset - Food exposure details","textarea",false],
+ ["b32","32. Ate food item 1 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+ ["b33","33. Ate food item 2 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+ ["b34","34. Ate food item 3 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+ ["b35","35. Ate food item 4 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+ ["b36","36. Ate food item 5 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+ ["b37","37. Other food exposure / details","textarea",false],
+ ["b38","38. Attended funerals within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+ ["b39","39. Attended other social event within 3 days before onset?","select",false,["Yes","No","Unknown"]]
 ];
 
 /**************** HTML ESCAPING ****************/
@@ -333,36 +476,38 @@ function renderFields(containerId,fields){
   if(type==="select"){
 
    control=`
-   <select id="${id}" name="${id}" ${required?"required":""}>
-    <option value="">Select...</option>
-    ${(options||[]).map(o=>
-     `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`
-    ).join("")}
-   </select>`;
+    <select id="${id}" name="${id}" ${required?"required":""}>
+     <option value="">Select...</option>
+     ${(options||[]).map(o=>
+      `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`
+     ).join("")}
+    </select>`;
 
   }else if(type==="textarea"){
 
    control=`
-   <textarea id="${id}" name="${id}" ${required?"required":""}></textarea>`;
+    <textarea id="${id}" name="${id}" ${required?"required":""}></textarea>`;
 
   }else{
 
    control=`
-   <input
-    id="${id}"
-    name="${id}"
-    type="${type||"text"}"
-    ${type==="number"?'min="0" step="1"':""}
-    ${required?"required":""}
-   >`;
+    <input
+     id="${id}"
+     name="${id}"
+     type="${type||"text"}"
+     ${type==="number"?'min="0" step="1"':""}
+     ${required?"required":""}
+    >`;
 
   }
 
   return `
-  <div class="field ${type==="textarea"?"full":""}">
-   <label for="${id}">${escapeHtml(label)} ${required?"*":""}</label>
-   ${control}
-  </div>`;
+   <div class="field ${type==="textarea"?"full":""}">
+    <label for="${id}">
+     ${escapeHtml(label)} ${required?'<span class="required-note">*</span>':""}
+    </label>
+    ${control}
+   </div>`;
 
  }).join("");
 
@@ -382,7 +527,9 @@ function value(id){
 
 function setValue(id,val){
  const el=document.getElementById(id);
- if(el)el.value=val||"";
+ if(el && !el.value && val!==undefined && val!==null){
+  el.value=val;
+ }
 }
 
 function linkSharedFields(){
@@ -503,19 +650,29 @@ function collectRecord(){
  const annexA=collectFields(annexAFields);
  const annexB=collectFields(annexBFields);
 
- annexA.a4=patient.lastName;
- annexA.a5=patient.firstName;
- annexA.a3=patient.patientId;
- annexA.a6=patient.ageYears;
+ /*
+  Copy shared information only when the corresponding
+  ANNEX field is empty. This prevents overwriting values
+  manually entered by the user in ANNEX 11B.
+ */
 
- annexA.a7=
-  patient.gender==="Male"?"M":
-  patient.gender==="Female"?"F":"";
+ const sharedValues={
+  a3:patient.patientId,
+  a4:patient.lastName,
+  a5:patient.firstName,
+  a6:patient.ageYears,
+  a7:patient.gender==="Male"?"M":patient.gender==="Female"?"F":"",
+  a10:patient.village,
+  a12:patient.district,
+  a13:patient.province,
+  a15:idsr.symptomOnset
+ };
 
- annexA.a10=patient.village;
- annexA.a12=patient.district;
- annexA.a13=patient.province;
- annexA.a15=idsr.symptomOnset;
+ Object.entries(sharedValues).forEach(([key,val])=>{
+  if(!annexA[key] && val){
+   annexA[key]=val;
+  }
+ });
 
  return {patient,idsr,annexA,annexB};
 
@@ -554,7 +711,9 @@ function makePdf(title,sections,patientName,caseId){
 
   const rows=section.fields.map(f=>[
    f[1],
-   section.data[f[0]]||""
+   section.data[f[0]]===undefined || section.data[f[0]]===null
+    ? ""
+    : String(section.data[f[0]])
   ]);
 
   doc.autoTable({
@@ -570,11 +729,13 @@ function makePdf(title,sections,patientName,caseId){
    styles:{
     fontSize:8,
     cellPadding:2,
-    overflow:"linebreak"
+    overflow:"linebreak",
+    valign:"top"
    },
 
    headStyles:{
-    fillColor:[18,59,93]
+    fillColor:[18,59,93],
+    textColor:255
    },
 
    columnStyles:{
@@ -584,8 +745,11 @@ function makePdf(title,sections,patientName,caseId){
 
    margin:{
     left:14,
-    right:14
-   }
+    right:14,
+    bottom:18
+   },
+
+   didDrawPage:function(){}
 
   });
 
@@ -604,6 +768,13 @@ function makePdf(title,sections,patientName,caseId){
    "NASHO HEALTH CENTER - Confidential Patient Report",
    14,
    287
+  );
+
+  doc.text(
+   "Page "+p+" of "+pages,
+   190,
+   287,
+   {align:"right"}
   );
 
  }
@@ -652,19 +823,82 @@ function downloadPdf(base64,filename){
 
 }
 
+/**************** SUCCESS MESSAGE ****************/
+
+function showSuccessModal(caseId){
+
+ document.getElementById("successCaseId").textContent=
+  "Case ID: "+caseId;
+
+ document.getElementById("successModal").classList.remove("hidden");
+
+}
+
+function closeSuccessModal(){
+
+ document.getElementById("successModal").classList.add("hidden");
+
+}
+
+function successGoToHistory(){
+
+ closeSuccessModal();
+ openHistory();
+
+}
+
 /**************** SUBMIT FORM ****************/
 
 document.getElementById("caseForm").addEventListener("submit",async function(e){
 
  e.preventDefault();
 
+ /*
+  Browser validation checks all required fields.
+  These five ANNEX 11B fields are mandatory:
+  a1 Detection day
+  a2 Detection place
+  a14 Country
+  a15 Date of onset
+  a16 Clinical signs and symptoms
+ */
+
+ if(!this.checkValidity()){
+  this.reportValidity();
+  showMessage(
+   "Please complete all required fields marked with * before submitting.",
+   "bad"
+  );
+  return;
+ }
+
  const submitBtn=document.getElementById("submitBtn");
+
  submitBtn.disabled=true;
- submitBtn.textContent="SUBMITTING...";
+ submitBtn.textContent="SUBMITTING REPORT...";
 
  try{
 
   const record=collectRecord();
+
+  // Additional validation for the five mandatory fields
+  const mandatoryFields=[
+   ["a1","Detection day"],
+   ["a2","Detection place"],
+   ["a14","Country"],
+   ["a15","Date of onset (first symptoms)"],
+   ["a16","Clinical signs and symptoms"]
+  ];
+
+  const missing=mandatoryFields.filter(([id])=>!record.annexA[id]);
+
+  if(missing.length){
+
+   const missingNames=missing.map(x=>x[1]).join(", ");
+
+   throw new Error("Please complete: "+missingNames);
+
+  }
 
   const patientName=(
    record.patient.firstName+" "+record.patient.lastName
@@ -672,8 +906,8 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
 
   const caseId="NASHO-"+Date.now();
 
-  // GENERATE BOTH PDFs IN MEMORY ONLY
-  // NO AUTOMATIC DOWNLOAD
+  // Generate PDFs in memory only.
+  // No automatic download is performed.
 
   const annexPdf=makePdf(
    "ANNEX 11B: CHOLERA CASE-BASED INVESTIGATION FORM",
@@ -705,6 +939,16 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
      title:"IDSR IMMEDIATE REPORT",
      fields:idsrFields,
      data:record.idsr
+    },
+    {
+     title:"ANNEX 11B - AREA A: ADDITIONAL CASE INFORMATION",
+     fields:annexAFields,
+     data:record.annexA
+    },
+    {
+     title:"ANNEX 11B - AREA B: RISK FACTOR SEARCH",
+     fields:annexBFields,
+     data:record.annexB
     }
    ],
    patientName,
@@ -718,42 +962,67 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
    patientId:record.patient.patientId,
    disease:record.idsr.disease,
    consultationDate:record.idsr.consultationDate,
-   dateOfOnset:record.idsr.symptomOnset,
+   dateOfOnset:record.annexA.a15,
    gender:record.patient.gender,
    phone:record.patient.phone,
    district:record.patient.district,
    sector:record.patient.sector,
    village:record.patient.village,
+
    status:"Pending synchronization",
+
    createdAt:new Date().toISOString(),
+
    record,
+
    annexPdf:dataUriToBase64(annexPdf),
    idsrPdf:dataUriToBase64(idsrPdf),
+
    annexFilename:cleanFilename(patientName)+"_ANNEX11B.pdf",
    idsrFilename:cleanFilename(patientName)+"_IDSR.pdf"
 
   };
 
-  // SAVE LOCALLY FIRST
+  // Save locally first, so the report is not lost.
   await saveLocal(item);
 
+  lastSubmittedCaseId=caseId;
+
   showMessage(
-   "Report saved. Synchronizing with NASHO server...",
-   "good"
+   "Report saved on this device. Sending it to NASHO HEALTH CENTER...",
+   "warning"
   );
 
-  this.reset();
-
-  // SYNCHRONIZE IF ONLINE
+  // Synchronize immediately when internet is available.
   if(navigator.onLine){
 
-   await syncCases();
+   const syncResult=await syncCases();
+
+   if(syncResult && syncResult.successCount>0){
+
+    this.reset();
+
+    showMessage(
+     "Report submitted successfully to NASHO HEALTH CENTER.",
+     "good"
+    );
+
+    showSuccessModal(caseId);
+
+   }else{
+
+    showMessage(
+     "Report saved on this device, but online submission was not confirmed. It is pending synchronization. Please use Synchronize Online when internet is available.",
+     "warning"
+    );
+
+   }
 
   }else{
 
    showMessage(
-    "Report saved offline. It will synchronize when internet returns. No PDF downloaded.",
-    "good"
+    "You are offline. The report has been saved on this device and is waiting for internet synchronization. It has not yet been sent to the server.",
+    "warning"
    );
 
   }
@@ -777,12 +1046,12 @@ async function syncCases(){
 
  if(!db){
   showMessage("Local database is not ready.","bad");
-  return;
+  return {successCount:0,failCount:0};
  }
 
  if(!navigator.onLine){
-  showMessage("Offline: reports are saved on this device.","bad");
-  return;
+  showMessage("Offline: reports are saved on this device.","warning");
+  return {successCount:0,failCount:0};
  }
 
  try{
@@ -794,7 +1063,7 @@ async function syncCases(){
   if(!pending.length){
 
    showMessage("No pending reports to synchronize.","good");
-   return;
+   return {successCount:0,failCount:0};
 
   }
 
@@ -870,20 +1139,35 @@ async function syncCases(){
 
   }
 
-  showMessage(
-   "Synchronization completed. Successful: "+successCount+
-   ". Pending/failed: "+failCount+
-   ". Email delivery status is recorded by the server.",
-   failCount?"bad":"good"
-  );
+  if(failCount===0){
+
+   showMessage(
+    "Synchronization completed successfully. "+successCount+
+    " report(s) submitted to the server.",
+    "good"
+   );
+
+  }else{
+
+   showMessage(
+    "Synchronization completed. Successful: "+successCount+
+    ". Pending/failed: "+failCount+".",
+    "warning"
+   );
+
+  }
 
   if(historyUnlocked){
    await renderHistory();
   }
 
+  return {successCount,failCount};
+
  }catch(err){
 
   showMessage("Synchronization error: "+err.message,"bad");
+
+  return {successCount:0,failCount:1};
 
  }
 
@@ -1103,15 +1387,11 @@ async function getHistoryRecords(){
     status:c.status||"Pending synchronization",
 
     annex11B:"",
-
     idsrPdf:"",
-
     annexDownload:"",
-
     idsrDownload:"",
 
     localAnnex:c.annexPdf||"",
-
     localIdsr:c.idsrPdf||"",
 
     record:c.record||{}
@@ -1147,7 +1427,6 @@ async function renderHistory(){
  const cases=await getHistoryRecords();
 
  const onlineCount=cases.filter(c=>c.source==="online").length;
-
  const pendingCount=cases.filter(c=>c.source==="local").length;
 
  document.getElementById("totalReports").textContent=cases.length;
@@ -1208,9 +1487,11 @@ async function renderHistory(){
 
    annexAction=`
 
-    <a href="${escapeHtml(c.annex11B||"#")}"
-       target="_blank"
-       rel="noopener">OPEN ANNEX 11B</a>
+    ${c.annex11B?`
+     <a href="${escapeHtml(c.annex11B)}"
+        target="_blank"
+        rel="noopener">OPEN ANNEX 11B</a>
+    `:"<span>No ANNEX PDF</span>"}
 
     ${c.annexDownload?`
      <a href="${escapeHtml(c.annexDownload)}"
@@ -1222,9 +1503,11 @@ async function renderHistory(){
 
    idsrAction=`
 
-    <a href="${escapeHtml(c.idsrPdf||"#")}"
-       target="_blank"
-       rel="noopener">OPEN IDSR</a>
+    ${c.idsrPdf?`
+     <a href="${escapeHtml(c.idsrPdf)}"
+        target="_blank"
+        rel="noopener">OPEN IDSR</a>
+    `:"<span>No IDSR PDF</span>"}
 
     ${c.idsrDownload?`
      <a href="${escapeHtml(c.idsrDownload)}"
@@ -1293,6 +1576,11 @@ async function renderHistory(){
 /**************** DOWNLOAD LOCAL PDF FROM HISTORY ****************/
 
 async function historyPdf(caseId,type){
+
+ if(!historyUnlocked){
+  alert("Please unlock My History first.");
+  return;
+ }
 
  const item=(await getAllCases()).find(c=>c.caseId===caseId);
 
