@@ -16,7 +16,7 @@ body{margin:0;background:#f3f6f9;color:#203040;font-family:Arial,sans-serif}
 header{background:var(--blue);color:white;padding:20px}
 header h1{margin:0;font-size:22px}
 header p{margin:7px 0 0}
-.container{max-width:1100px;margin:20px auto;padding:0 14px}
+.container{max-width:1200px;margin:20px auto;padding:0 14px}
 .nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
 button{border:0;border-radius:6px;padding:11px 16px;cursor:pointer;font-weight:bold}
 button:disabled{opacity:.6;cursor:wait}
@@ -37,20 +37,29 @@ h3{color:#24516e;font-size:16px;border-bottom:1px solid #dce5eb;padding-bottom:8
 .status{padding:10px;border-radius:6px;margin:10px 0;background:#edf4f8}
 .good{background:#e5f5eb;color:#17683b}
 .bad{background:#ffeded;color:#9b2424}
-table{width:100%;border-collapse:collapse}
-th,td{padding:9px;border-bottom:1px solid #e1e7ec;text-align:left;font-size:13px}
+table{width:100%;border-collapse:collapse;min-width:850px}
+th,td{padding:9px;border-bottom:1px solid #e1e7ec;text-align:left;font-size:13px;vertical-align:top}
 th{background:#edf3f7}
 .actions{display:flex;gap:6px;flex-wrap:wrap}
+.actions a{font-size:12px;font-weight:bold;color:#123b5d}
 .modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:15px;z-index:10}
 .modalbox{background:white;border-radius:10px;padding:22px;width:100%;max-width:400px}
 .modalbox input{width:100%;padding:12px;margin:12px 0;border:1px solid #bbb;border-radius:6px}
 footer{text-align:center;color:#687887;font-size:12px;padding:25px}
-@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}
+.summary div{background:#edf3f7;padding:14px;border-radius:8px}
+.summary strong{display:block;font-size:22px;color:var(--blue)}
+@media(max-width:650px){
+ .grid{grid-template-columns:1fr}
+ .full{grid-column:auto}
+ .summary{grid-template-columns:1fr}
+}
 @media print{.no-print{display:none!important}}
 </style>
 </head>
 
 <body>
+
 <header>
 <h1>NASHO HEALTH CENTER</h1>
 <p>Cholera Case-Based Investigation & IDSR Immediate Report System</p>
@@ -66,7 +75,9 @@ footer{text-align:center;color:#687887;font-size:12px;padding:25px}
 
 <div id="message" class="status">System starting...</div>
 
+<!-- NEW REPORT PAGE -->
 <section id="formPage">
+
 <form id="caseForm">
 
 <div class="card">
@@ -100,30 +111,71 @@ footer{text-align:center;color:#687887;font-size:12px;padding:25px}
 </form>
 </section>
 
+<!-- HISTORY PAGE -->
 <section id="historyPage" class="hidden">
+
 <div class="card">
+
 <h2>My History</h2>
-<p class="small">Patient reports saved on this device.</p>
-<input id="historySearch" placeholder="Search patient name or case ID..."
-oninput="renderHistory()"
-style="padding:11px;width:100%;margin-bottom:12px;border:1px solid #ccd5dd;border-radius:6px">
-<div id="historyList"></div>
-<button class="secondary no-print" onclick="showPage('formPage')">Back to Form</button>
+
+<p class="small">
+All patient reports submitted to NASHO HEALTH CENTER are displayed here,
+including reports created on other computers.
+</p>
+
+<div class="summary">
+<div>
+<strong id="totalReports">0</strong>
+<span class="small">Total Reports</span>
+</div>
+<div>
+<strong id="onlineReports">0</strong>
+<span class="small">Online Reports</span>
+</div>
+<div>
+<strong id="pendingReports">0</strong>
+<span class="small">Pending Synchronization</span>
+</div>
+</div>
+
+<input
+ id="historySearch"
+ placeholder="Search patient name, Patient ID, district or Case ID..."
+ oninput="renderHistory()"
+ style="padding:11px;width:100%;margin-bottom:12px;border:1px solid #ccd5dd;border-radius:6px"
+>
+
+<div id="historyList">
+<p>Reports will appear here.</p>
+</div>
+
+<div class="actions no-print" style="margin-top:15px">
+<button class="secondary" onclick="refreshHistory()">Refresh History</button>
+<button class="secondary" onclick="showPage('formPage')">Back to Form</button>
+<button class="danger" onclick="lockHistory()">Lock History</button>
+</div>
+
 </div>
 </section>
 
 </div>
 
+<!-- PASSWORD MODAL -->
 <div id="passwordModal" class="modal hidden">
 <div class="modalbox">
+
 <h2>My History - Password</h2>
-<p>Enter the password to open patient history.</p>
+<p>Enter the password to access all patient reports.</p>
+
 <input id="historyPassword" type="password" placeholder="Enter password">
+
 <p id="passwordError" class="small" style="color:#bd3434"></p>
+
 <div class="actions">
-<button class="primary" onclick="checkHistoryPassword()">Unlock</button>
+<button class="primary" id="unlockBtn" onclick="checkHistoryPassword()">Unlock</button>
 <button class="secondary" onclick="closeHistoryModal()">Cancel</button>
 </div>
+
 </div>
 </div>
 
@@ -135,9 +187,12 @@ style="padding:11px;width:100%;margin-bottom:12px;border:1px solid #ccd5dd;borde
 
 const API_URL = "https://script.google.com/macros/s/AKfycby-gzfcAWsYi4nRYurfWqsFM35Gwu7AQoj-m_qpNwfvoonJPgmSGhn8W7FbeZWuAGuXfA/exec";
 
-const HISTORY_PASSWORD = "Nasho123";
 const DB_NAME = "NashoCholeraDB";
 const STORE_NAME = "cases";
+
+let db;
+let historyUnlocked = false;
+let remoteReports = [];
 
 /**************** PATIENT FIELDS ****************/
 
@@ -250,37 +305,65 @@ const annexBFields = [
 ["b39","39. Attended other social event within 3 days before onset?","select",false,["Yes","No","Unknown"]]
 ];
 
-/**************** RENDER FORM FIELDS ****************/
+/**************** HTML ESCAPING ****************/
 
 function escapeHtml(v){
  return String(v??"").replace(/[&<>"']/g,ch=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
  }[ch]));
 }
 
+/**************** RENDER FORM FIELDS ****************/
+
 function renderFields(containerId,fields){
+
  const container=document.getElementById(containerId);
 
  container.innerHTML=fields.map(f=>{
+
   const [id,label,type,required,options]=f;
   let control="";
 
   if(type==="select"){
-   control=`<select id="${id}" name="${id}" ${required?"required":""}>
-   <option value="">Select...</option>
-   ${(options||[]).map(o=>`<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join("")}
+
+   control=`
+   <select id="${id}" name="${id}" ${required?"required":""}>
+    <option value="">Select...</option>
+    ${(options||[]).map(o=>
+     `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`
+    ).join("")}
    </select>`;
+
   }else if(type==="textarea"){
-   control=`<textarea id="${id}" name="${id}" ${required?"required":""}></textarea>`;
+
+   control=`
+   <textarea id="${id}" name="${id}" ${required?"required":""}></textarea>`;
+
   }else{
-   control=`<input id="${id}" name="${id}" type="${type||"text"}"
-   ${type==="number"?'min="0" step="1"':""} ${required?"required":""}>`;
+
+   control=`
+   <input
+    id="${id}"
+    name="${id}"
+    type="${type||"text"}"
+    ${type==="number"?'min="0" step="1"':""}
+    ${required?"required":""}
+   >`;
+
   }
 
-  return `<div class="field ${type==="textarea"?"full":""}">
-  <label for="${id}">${escapeHtml(label)} ${required?"*":""}</label>
-  ${control}</div>`;
+  return `
+  <div class="field ${type==="textarea"?"full":""}">
+   <label for="${id}">${escapeHtml(label)} ${required?"*":""}</label>
+   ${control}
+  </div>`;
+
  }).join("");
+
 }
 
 renderFields("patientFields",patientFields);
@@ -315,37 +398,46 @@ function linkSharedFields(){
  };
 
  Object.entries(links).forEach(([source,target])=>{
+
   const el=document.getElementById(source);
   if(!el)return;
 
   function copy(){
+
    let v=el.value;
+
    if(source==="gender"){
     v=v==="Male"?"M":v==="Female"?"F":"";
    }
+
    setValue(target,v);
   }
 
   el.addEventListener("input",copy);
   el.addEventListener("change",copy);
+
  });
+
 }
 
 linkSharedFields();
 
 /**************** INDEXED DATABASE ****************/
 
-let db;
-
 function openDatabase(){
+
  return new Promise((resolve,reject)=>{
+
   const request=indexedDB.open(DB_NAME,1);
 
   request.onupgradeneeded=e=>{
+
    const database=e.target.result;
+
    if(!database.objectStoreNames.contains(STORE_NAME)){
     database.createObjectStore(STORE_NAME,{keyPath:"caseId"});
    }
+
   };
 
   request.onsuccess=e=>{
@@ -354,33 +446,52 @@ function openDatabase(){
   };
 
   request.onerror=()=>reject(request.error);
+
  });
+
 }
 
 function saveLocal(record){
+
  return new Promise((resolve,reject)=>{
+
   const tx=db.transaction(STORE_NAME,"readwrite");
+
   tx.objectStore(STORE_NAME).put(record);
+
   tx.oncomplete=()=>resolve(true);
   tx.onerror=()=>reject(tx.error);
+
  });
+
 }
 
 function getAllCases(){
+
  return new Promise((resolve,reject)=>{
+
   const tx=db.transaction(STORE_NAME,"readonly");
   const request=tx.objectStore(STORE_NAME).getAll();
+
   request.onsuccess=()=>resolve(request.result||[]);
   request.onerror=()=>reject(request.error);
+
  });
+
 }
 
 /**************** COLLECT COMPLETE RECORD ****************/
 
 function collectFields(fields){
+
  const result={};
- fields.forEach(f=>result[f[0]]=value(f[0]));
+
+ fields.forEach(f=>{
+  result[f[0]]=value(f[0]);
+ });
+
  return result;
+
 }
 
 function collectRecord(){
@@ -394,13 +505,18 @@ function collectRecord(){
  annexA.a5=patient.firstName;
  annexA.a3=patient.patientId;
  annexA.a6=patient.ageYears;
- annexA.a7=patient.gender==="Male"?"M":patient.gender==="Female"?"F":"";
+
+ annexA.a7=
+  patient.gender==="Male"?"M":
+  patient.gender==="Female"?"F":"";
+
  annexA.a10=patient.village;
  annexA.a12=patient.district;
  annexA.a13=patient.province;
  annexA.a15=idsr.symptomOnset;
 
  return {patient,idsr,annexA,annexB};
+
 }
 
 /**************** PDF GENERATION ****************/
@@ -412,7 +528,12 @@ function makePdf(title,sections,patientName,caseId){
  }
 
  const {jsPDF}=window.jspdf;
- const doc=new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+
+ const doc=new jsPDF({
+  orientation:"portrait",
+  unit:"mm",
+  format:"a4"
+ });
 
  doc.setFontSize(15);
  doc.text("NASHO HEALTH CENTER",14,15);
@@ -435,36 +556,68 @@ function makePdf(title,sections,patientName,caseId){
   ]);
 
   doc.autoTable({
+
    startY:y,
+
    head:[[section.title,"Patient Information"]],
+
    body:rows,
+
    theme:"grid",
-   styles:{fontSize:8,cellPadding:2,overflow:"linebreak"},
-   headStyles:{fillColor:[18,59,93]},
-   columnStyles:{0:{cellWidth:85},1:{cellWidth:95}},
-   margin:{left:14,right:14}
+
+   styles:{
+    fontSize:8,
+    cellPadding:2,
+    overflow:"linebreak"
+   },
+
+   headStyles:{
+    fillColor:[18,59,93]
+   },
+
+   columnStyles:{
+    0:{cellWidth:85},
+    1:{cellWidth:95}
+   },
+
+   margin:{
+    left:14,
+    right:14
+   }
+
   });
 
   y=doc.lastAutoTable.finalY+7;
+
  });
 
  const pages=doc.internal.getNumberOfPages();
 
  for(let p=1;p<=pages;p++){
+
   doc.setPage(p);
   doc.setFontSize(8);
-  doc.text("NASHO HEALTH CENTER - Confidential Patient Report",14,287);
+
+  doc.text(
+   "NASHO HEALTH CENTER - Confidential Patient Report",
+   14,
+   287
+  );
+
  }
 
  return doc.output("datauristring");
+
 }
 
 function cleanFilename(name){
+
  return String(name||"PATIENT")
  .trim()
  .replace(/[\\/:*?"<>|]/g,"")
  .replace(/\s+/g,"_")
  .toUpperCase();
+
 }
 
 function dataUriToBase64(dataUri){
@@ -473,6 +626,11 @@ function dataUriToBase64(dataUri){
 
 function downloadPdf(base64,filename){
 
+ if(!base64){
+  alert("PDF data is not available on this device.");
+  return;
+ }
+
  const blob=new Blob(
   [Uint8Array.from(atob(base64),c=>c.charCodeAt(0))],
   {type:"application/pdf"}
@@ -480,13 +638,16 @@ function downloadPdf(base64,filename){
 
  const url=URL.createObjectURL(blob);
  const a=document.createElement("a");
+
  a.href=url;
  a.download=filename;
+
  document.body.appendChild(a);
  a.click();
  a.remove();
 
  setTimeout(()=>URL.revokeObjectURL(url),30000);
+
 }
 
 /**************** SUBMIT FORM ****************/
@@ -502,10 +663,6 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
 
   const record=collectRecord();
 
-  if(!record.patient.firstName||!record.patient.lastName){
-   throw new Error("Patient first name and last name are required.");
-  }
-
   const patientName=(
    record.patient.firstName+" "+record.patient.lastName
   ).trim();
@@ -515,8 +672,16 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
   const annexPdf=makePdf(
    "ANNEX 11B: CHOLERA CASE-BASED INVESTIGATION FORM",
    [
-    {title:"AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION",fields:annexAFields,data:record.annexA},
-    {title:"AREA B: RISK FACTOR SEARCH",fields:annexBFields,data:record.annexB}
+    {
+     title:"AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION",
+     fields:annexAFields,
+     data:record.annexA
+    },
+    {
+     title:"AREA B: RISK FACTOR SEARCH",
+     fields:annexBFields,
+     data:record.annexB
+    }
    ],
    patientName,
    caseId
@@ -525,42 +690,69 @@ document.getElementById("caseForm").addEventListener("submit",async function(e){
   const idsrPdf=makePdf(
    "IDSR IMMEDIATE REPORT FORM",
    [
-    {title:"PATIENT IDENTIFICATION",fields:patientFields,data:record.patient},
-    {title:"IDSR IMMEDIATE REPORT",fields:idsrFields,data:record.idsr}
+    {
+     title:"PATIENT IDENTIFICATION",
+     fields:patientFields,
+     data:record.patient
+    },
+    {
+     title:"IDSR IMMEDIATE REPORT",
+     fields:idsrFields,
+     data:record.idsr
+    }
    ],
    patientName,
    caseId
   );
 
   const item={
+
    caseId,
    patientName,
+
    patientId:record.patient.patientId,
+
    disease:record.idsr.disease,
+
    consultationDate:record.idsr.consultationDate,
+
    dateOfOnset:record.idsr.symptomOnset,
+
    gender:record.patient.gender,
+
    phone:record.patient.phone,
+
    district:record.patient.district,
+
    sector:record.patient.sector,
+
    village:record.patient.village,
+
    status:"Pending synchronization",
+
    createdAt:new Date().toISOString(),
+
    record,
+
    annexPdf:dataUriToBase64(annexPdf),
+
    idsrPdf:dataUriToBase64(idsrPdf),
+
    annexFilename:cleanFilename(patientName)+"_ANNEX11B.pdf",
+
    idsrFilename:cleanFilename(patientName)+"_IDSR.pdf"
+
   };
 
-  // Save first, so offline reports are not lost.
+  // Save locally first
   await saveLocal(item);
 
+  // Download both PDF files
   downloadPdf(item.annexPdf,item.annexFilename);
   downloadPdf(item.idsrPdf,item.idsrFilename);
 
   showMessage(
-   "Patient saved locally. Both PDFs generated. Sending complete form to Google Sheets...",
+   "Patient report saved locally. Both PDFs generated. Synchronizing with Google Sheets...",
    "good"
   );
 
@@ -601,8 +793,10 @@ async function syncCases(){
   const pending=cases.filter(c=>c.status!=="Synchronized");
 
   if(!pending.length){
+
    showMessage("No pending reports to synchronize.","good");
    return;
+
   }
 
   let successCount=0;
@@ -615,23 +809,7 @@ async function syncCases(){
     action:"submitCase",
 
     caseId:item.caseId,
-    patientName:item.patientName,
-    patientId:item.patientId,
 
-    disease:item.disease,
-    consultationDate:item.consultationDate,
-    dateOfOnset:item.dateOfOnset,
-
-    gender:item.gender,
-    phone:item.phone,
-
-    district:item.district,
-    sector:item.sector,
-    village:item.village,
-
-    status:"Submitted",
-
-    // ALL FOUR SECTIONS
     record:{
      patient:item.record.patient,
      idsr:item.record.idsr,
@@ -639,21 +817,27 @@ async function syncCases(){
      annexB:item.record.annexB
     },
 
-    // BOTH PDF FILES
-    annexPdf:item.annexPdf,
-    idsrPdf:item.idsrPdf,
+    pdfs:{
+     annex11B:item.annexPdf,
+     idsr:item.idsrPdf
+    }
 
-    annexFilename:item.annexFilename,
-    idsrFilename:item.idsrFilename
    };
 
    try{
 
     const response=await fetch(API_URL,{
+
      method:"POST",
-     headers:{"Content-Type":"text/plain;charset=utf-8"},
+
+     headers:{
+      "Content-Type":"text/plain;charset=utf-8"
+     },
+
      body:JSON.stringify(payload),
+
      redirect:"follow"
+
     });
 
     const result=await response.json();
@@ -664,8 +848,9 @@ async function syncCases(){
 
     item.status="Synchronized";
     item.syncedAt=new Date().toISOString();
-    item.annexPdfUrl=result.annexPdfUrl||"";
-    item.idsrPdfUrl=result.idsrPdfUrl||"";
+
+    item.annexPdfUrl=result.annex11B||"";
+    item.idsrPdfUrl=result.idsrPdf||"";
 
     successCount++;
 
@@ -680,15 +865,15 @@ async function syncCases(){
 
   }
 
-  if(!document.getElementById("historyPage").classList.contains("hidden")){
-   await renderHistory();
-  }
-
   showMessage(
    "Synchronization completed. Successful: "+successCount+
    ". Pending/failed: "+failCount+".",
    failCount?"bad":"good"
   );
+
+  if(historyUnlocked){
+   await renderHistory();
+  }
 
  }catch(err){
 
@@ -705,92 +890,417 @@ window.addEventListener("online",()=>syncCases());
 function openHistory(){
 
  document.getElementById("passwordModal").classList.remove("hidden");
+
  document.getElementById("historyPassword").value="";
+
  document.getElementById("passwordError").textContent="";
+
  document.getElementById("historyPassword").focus();
 
 }
 
 function closeHistoryModal(){
+
  document.getElementById("passwordModal").classList.add("hidden");
+
 }
 
-function checkHistoryPassword(){
+/**
+ * Verify password using Google Apps Script.
+ * Then retrieve all reports from Google Sheets.
+ */
+async function checkHistoryPassword(){
 
  const password=document.getElementById("historyPassword").value;
 
- if(password!==HISTORY_PASSWORD){
-  document.getElementById("passwordError").textContent="Incorrect password.";
+ const error=document.getElementById("passwordError");
+
+ const unlockBtn=document.getElementById("unlockBtn");
+
+ if(!password){
+  error.textContent="Please enter your password.";
   return;
  }
 
- closeHistoryModal();
- showPage("historyPage");
- renderHistory();
+ unlockBtn.disabled=true;
+ error.textContent="Checking password and loading reports...";
+
+ try{
+
+  const response=await fetch(API_URL,{
+
+   method:"POST",
+
+   headers:{
+    "Content-Type":"text/plain;charset=utf-8"
+   },
+
+   body:JSON.stringify({
+    action:"getHistory",
+    password:password
+   }),
+
+   redirect:"follow"
+
+  });
+
+  const result=await response.json();
+
+  if(!result.success){
+
+   error.textContent=result.message||"Incorrect password.";
+   return;
+
+  }
+
+  historyUnlocked=true;
+
+  remoteReports=result.reports||[];
+
+  closeHistoryModal();
+
+  showPage("historyPage");
+
+  document.getElementById("historySearch").value="";
+
+  await renderHistory();
+
+  showMessage(
+   "My History unlocked. "+remoteReports.length+" online reports loaded.",
+   "good"
+  );
+
+ }catch(err){
+
+  error.textContent=
+   "Unable to load online history. Check internet and Apps Script deployment.";
+
+ }finally{
+
+  unlockBtn.disabled=false;
+
+ }
 
 }
 
-async function renderHistory(){
+/**
+ * Refresh online reports.
+ */
+async function refreshHistory(){
 
- const list=document.getElementById("historyList");
- const search=(document.getElementById("historySearch").value||"").toLowerCase();
+ if(!historyUnlocked)return;
 
- let cases=await getAllCases();
+ const password=prompt("Enter My History password again to refresh reports:");
 
- cases.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt));
+ if(!password)return;
 
- cases=cases.filter(c=>
-  (c.patientName||"").toLowerCase().includes(search)||
-  (c.caseId||"").toLowerCase().includes(search)
+ try{
+
+  const response=await fetch(API_URL,{
+
+   method:"POST",
+
+   headers:{
+    "Content-Type":"text/plain;charset=utf-8"
+   },
+
+   body:JSON.stringify({
+    action:"getHistory",
+    password:password
+   }),
+
+   redirect:"follow"
+
+  });
+
+  const result=await response.json();
+
+  if(!result.success){
+
+   alert(result.message||"Unable to refresh reports.");
+   return;
+
+  }
+
+  remoteReports=result.reports||[];
+
+  await renderHistory();
+
+  showMessage("History refreshed successfully.","good");
+
+ }catch(err){
+
+  showMessage("Unable to refresh online history.","bad");
+
+ }
+
+}
+
+/**
+ * Lock history page.
+ */
+function lockHistory(){
+
+ historyUnlocked=false;
+ remoteReports=[];
+
+ showPage("formPage");
+
+ showMessage("My History locked.","good");
+
+}
+
+/**
+ * Combine remote reports and local pending reports.
+ */
+async function getHistoryRecords(){
+
+ const localCases=await getAllCases();
+
+ const combined=remoteReports.map(r=>({
+
+  source:"online",
+
+  caseId:r.caseId||"",
+
+  patientName:r.patientName||"",
+
+  patientId:r.patientId||"",
+
+  submissionDate:r.submissionDate||"",
+
+  disease:(r.record&&r.record.idsr&&r.record.idsr.disease)||"",
+
+  district:(r.record&&r.record.patient&&r.record.patient.district)||"",
+
+  status:r.status||"SUBMITTED",
+
+  annex11B:r.annex11B||"",
+
+  idsrPdf:r.idsrPdf||"",
+
+  record:r.record||{}
+
+ }));
+
+ const onlineIds=new Set(combined.map(r=>r.caseId));
+
+ localCases.forEach(c=>{
+
+  if(!onlineIds.has(c.caseId)){
+
+   combined.push({
+
+    source:"local",
+
+    caseId:c.caseId,
+
+    patientName:c.patientName||"",
+
+    patientId:c.patientId||"",
+
+    submissionDate:c.createdAt||"",
+
+    disease:c.disease||"",
+
+    district:c.district||"",
+
+    status:c.status||"Pending synchronization",
+
+    annex11B:"",
+
+    idsrPdf:"",
+
+    localAnnex:c.annexPdf||"",
+
+    localIdsr:c.idsrPdf||"",
+
+    record:c.record||{}
+
+   });
+
+  }
+
+ });
+
+ combined.sort((a,b)=>
+  new Date(b.submissionDate)-new Date(a.submissionDate)
  );
 
- if(!cases.length){
-  list.innerHTML="<p>No patient reports found.</p>";
+ return combined;
+
+}
+
+/**
+ * Display all reports.
+ */
+async function renderHistory(){
+
+ if(!historyUnlocked)return;
+
+ const list=document.getElementById("historyList");
+
+ const search=(
+  document.getElementById("historySearch").value||""
+ ).toLowerCase();
+
+ list.innerHTML="<p>Loading reports...</p>";
+
+ const cases=await getHistoryRecords();
+
+ const onlineCount=cases.filter(c=>c.source==="online").length;
+
+ const pendingCount=cases.filter(c=>c.source==="local").length;
+
+ document.getElementById("totalReports").textContent=cases.length;
+
+ document.getElementById("onlineReports").textContent=onlineCount;
+
+ document.getElementById("pendingReports").textContent=pendingCount;
+
+ const filtered=cases.filter(c=>
+
+  (c.patientName||"").toLowerCase().includes(search)||
+
+  (c.caseId||"").toLowerCase().includes(search)||
+
+  (c.patientId||"").toLowerCase().includes(search)||
+
+  (c.district||"").toLowerCase().includes(search)
+
+ );
+
+ if(!filtered.length){
+
+  list.innerHTML=`
+   <div class="status">
+    No patient reports found.
+   </div>
+  `;
+
   return;
+
  }
 
  list.innerHTML=`
+
+ <div class="status good">
+  Total reports: <b>${cases.length}</b>
+  | Displayed: <b>${filtered.length}</b>
+ </div>
+
+ <div style="overflow-x:auto">
+
  <table>
+
  <thead>
  <tr>
- <th>Patient</th>
- <th>Case ID</th>
- <th>Date</th>
- <th>Status</th>
- <th>PDF Reports</th>
+  <th>Patient Name</th>
+  <th>Patient ID</th>
+  <th>Case ID</th>
+  <th>Disease</th>
+  <th>District</th>
+  <th>Date</th>
+  <th>Status</th>
+  <th>Reports / PDF</th>
  </tr>
  </thead>
+
  <tbody>
- ${cases.map(c=>`
- <tr>
- <td><b>${escapeHtml(c.patientName)}</b></td>
- <td>${escapeHtml(c.caseId)}</td>
- <td>${new Date(c.createdAt).toLocaleDateString()}</td>
- <td>${escapeHtml(c.status)}</td>
- <td>
- <div class="actions">
- <button class="primary" onclick="historyPdf('${c.caseId}','annex')">ANNEX 11B</button>
- <button class="secondary" onclick="historyPdf('${c.caseId}','idsr')">IDSR</button>
- </div>
- </td>
- </tr>
- `).join("")}
+
+ ${filtered.map(c=>{
+
+  let annexAction="";
+  let idsrAction="";
+
+  if(c.source==="online"){
+
+   annexAction=c.annex11B
+    ? `<a href="${escapeHtml(c.annex11B)}" target="_blank" rel="noopener">Open ANNEX 11B</a>`
+    : `<span class="small">ANNEX PDF unavailable</span>`;
+
+   idsrAction=c.idsrPdf
+    ? `<a href="${escapeHtml(c.idsrPdf)}" target="_blank" rel="noopener">Open IDSR</a>`
+    : `<span class="small">IDSR PDF unavailable</span>`;
+
+  }else{
+
+   annexAction=`
+    <button class="primary" onclick="historyPdf('${escapeHtml(c.caseId)}','annex')">
+     ANNEX 11B
+    </button>`;
+
+   idsrAction=`
+    <button class="secondary" onclick="historyPdf('${escapeHtml(c.caseId)}','idsr')">
+     IDSR
+    </button>`;
+
+  }
+
+  return `
+   <tr>
+
+    <td><b>${escapeHtml(c.patientName)}</b></td>
+
+    <td>${escapeHtml(c.patientId)}</td>
+
+    <td>${escapeHtml(c.caseId)}</td>
+
+    <td>${escapeHtml(c.disease)}</td>
+
+    <td>${escapeHtml(c.district)}</td>
+
+    <td>${escapeHtml(c.submissionDate)}</td>
+
+    <td>${escapeHtml(c.status)}</td>
+
+    <td>
+     <div class="actions">
+      ${annexAction}
+      ${idsrAction}
+     </div>
+    </td>
+
+   </tr>
+  `;
+
+ }).join("")}
+
  </tbody>
+
  </table>
+
+ </div>
  `;
 
 }
 
+/**
+ * Download locally stored PDFs.
+ */
 async function historyPdf(caseId,type){
 
  const item=(await getAllCases()).find(c=>c.caseId===caseId);
 
- if(!item)return;
+ if(!item){
+  alert("Local report not found.");
+  return;
+ }
 
  if(type==="annex"){
-  downloadPdf(item.annexPdf,item.annexFilename);
+
+  downloadPdf(
+   item.annexPdf,
+   item.annexFilename||"ANNEX11B.pdf"
+  );
+
  }else{
-  downloadPdf(item.idsrPdf,item.idsrFilename);
+
+  downloadPdf(
+   item.idsrPdf,
+   item.idsrFilename||"IDSR.pdf"
+  );
+
  }
 
 }
@@ -808,6 +1318,7 @@ function clearForm(){
 function showPage(id){
 
  document.getElementById("formPage").classList.add("hidden");
+
  document.getElementById("historyPage").classList.add("hidden");
 
  document.getElementById(id).classList.remove("hidden");
@@ -817,7 +1328,9 @@ function showPage(id){
 function showMessage(message,type){
 
  const box=document.getElementById("message");
+
  box.textContent=message;
+
  box.className="status "+(type||"");
 
 }
@@ -845,5 +1358,6 @@ function showMessage(message,type){
 })();
 
 </script>
+
 </body>
 </html>
