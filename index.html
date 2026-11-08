@@ -3,409 +3,737 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>NASHO HC - Cholera Investigation</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NASHO HC - Cholera & IDSR Reporting</title>
 
-<!-- PDF generator -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 
 <style>
+:root{--blue:#123b5d;--light:#edf4f8;--green:#16834a;--red:#bd3434}
 *{box-sizing:border-box}
-body{
- margin:0;background:#f1f5f9;
- font-family:Arial,sans-serif;color:#1e293b
+body{margin:0;background:#f3f6f9;color:#203040;font-family:Arial,sans-serif}
+header{background:var(--blue);color:white;padding:20px}
+header h1{margin:0;font-size:22px}
+header p{margin:7px 0 0}
+.container{max-width:1100px;margin:20px auto;padding:0 14px}
+.nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+button{border:0;border-radius:6px;padding:11px 16px;cursor:pointer;font-weight:bold}
+.primary{background:var(--blue);color:white}
+.success{background:var(--green);color:white}
+.secondary{background:#dce7ef;color:#17364d}
+.danger{background:var(--red);color:white}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:16px;box-shadow:0 2px 8px #0000000c}
+h2{color:var(--blue);font-size:19px}
+h3{color:#24516e;font-size:16px;border-bottom:1px solid #dce5eb;padding-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}
+.field label{display:block;font-size:13px;font-weight:bold;margin-bottom:5px}
+.field input,.field select,.field textarea{
+ width:100%;padding:10px;border:1px solid #cbd5df;border-radius:6px;background:white
 }
-header{
- background:#07549b;color:white;
- padding:22px;text-align:center
-}
-header h2{margin:0 0 8px}
-.container{max-width:1000px;margin:20px auto;padding:12px}
-.status{
- display:flex;justify-content:space-between;
- flex-wrap:wrap;gap:10px;
- background:white;padding:15px;border-radius:9px;
- margin-bottom:15px
-}
-.card{
- background:white;padding:20px;
- border-radius:10px;margin-bottom:18px;
- box-shadow:0 2px 8px #00000010
-}
-h3{color:#07549b;border-bottom:2px solid #e2e8f0;padding-bottom:10px}
-.grid{
- display:grid;grid-template-columns:1fr 1fr;gap:15px
-}
-.field{margin-bottom:8px}
+.field textarea{min-height:70px;resize:vertical}
 .full{grid-column:1/-1}
-label{display:block;font-weight:bold;font-size:13px;margin-bottom:6px}
-input,select,textarea{
- width:100%;padding:11px;border:1px solid #cbd5e1;
- border-radius:6px;font-size:14px
-}
-textarea{min-height:75px}
-button{
- border:0;padding:12px 18px;border-radius:6px;
- background:#07549b;color:white;font-weight:bold;
- cursor:pointer;margin:4px
-}
-button:disabled{opacity:.5}
-.secondary{background:#475569}
-.green{background:#16803c}
-.orange{background:#c56b0b}
-.subheading{
- grid-column:1/-1;background:#eaf3fb;
- padding:11px;font-weight:bold;color:#07549b
-}
-#message{padding:12px;margin-top:12px;border-radius:6px}
-@media(max-width:650px){
- .grid{grid-template-columns:1fr}
- .full,.subheading{grid-column:1}
- .container{padding:8px}
-}
+.small{font-size:12px;color:#657788}
+.hidden{display:none!important}
+.status{padding:10px;border-radius:6px;margin:10px 0;background:#edf4f8}
+.good{background:#e5f5eb;color:#17683b}
+.bad{background:#ffeded;color:#9b2424}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px;border-bottom:1px solid #e1e7ec;text-align:left;font-size:13px}
+th{background:#edf3f7}
+.actions{display:flex;gap:6px;flex-wrap:wrap}
+.modal{position:fixed;inset:0;background:#0009;display:flex;align-items:center;justify-content:center;padding:15px;z-index:10}
+.modalbox{background:white;border-radius:10px;padding:22px;width:100%;max-width:400px}
+.modalbox input{width:100%;padding:12px;margin:12px 0;border:1px solid #bbb;border-radius:6px}
+footer{text-align:center;color:#687887;font-size:12px;padding:25px}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.full{grid-column:auto}}
+@media print{.no-print{display:none!important}}
 </style>
 </head>
 
 <body>
-
 <header>
-<h2>NASHO HEALTH CENTER</h2>
-<div>ANNEX 11B: CHOLERA CASE-BASED INVESTIGATION FORM</div>
+  <h1>NASHO HEALTH CENTER</h1>
+  <p>Cholera Case-Based Investigation & IDSR Immediate Report System</p>
 </header>
 
 <div class="container">
+  <div class="nav no-print">
+    <button class="primary" onclick="showPage('formPage')">New Patient Report</button>
+    <button class="secondary" onclick="openHistory()">My History</button>
+    <button class="secondary" onclick="syncCases()">Synchronize Online</button>
+  </div>
 
-<div class="status">
- <span id="connection">Checking connection...</span>
- <span>Pending Sync: <b id="pending">0</b></span>
- <span>Saved Cases: <b id="total">0</b></span>
+  <div id="message" class="status">System ready. Offline records are saved on this device.</div>
+
+  <section id="formPage">
+    <form id="caseForm">
+      <div class="card">
+        <h2>Patient Identification</h2>
+        <p class="small">Enter patient information. Shared patient details will be transferred to both reports where applicable.</p>
+        <div id="patientFields" class="grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>IDSR Immediate Report Form</h2>
+        <p class="small">Information based on the uploaded Tracker Capture document.</p>
+        <div id="idsrFields" class="grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>ANNEX 11B - Area A</h2>
+        <h3>Patient and clinical laboratory related information</h3>
+        <div id="annexAFields" class="grid"></div>
+      </div>
+
+      <div class="card">
+        <h2>ANNEX 11B - Area B</h2>
+        <h3>Risk factor search - Mapping potential hazards</h3>
+        <div id="annexBFields" class="grid"></div>
+      </div>
+
+      <div class="card no-print">
+        <button class="success" type="submit">Save Patient & Generate Both PDFs</button>
+        <button class="secondary" type="button" onclick="document.getElementById('caseForm').reset()">Clear Form</button>
+      </div>
+    </form>
+  </section>
+
+  <section id="historyPage" class="hidden">
+    <div class="card">
+      <h2>My History</h2>
+      <p class="small">Patient reports saved on this device.</p>
+      <input id="historySearch" placeholder="Search patient name or case ID..." oninput="renderHistory()" style="padding:11px;width:100%;margin-bottom:12px;border:1px solid #ccd5dd;border-radius:6px">
+      <div id="historyList"></div>
+      <button class="secondary no-print" onclick="showPage('formPage')">Back to Form</button>
+    </div>
+  </section>
 </div>
 
-<form id="caseForm">
-
-<div class="card">
-<h3>AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION</h3>
-<div class="grid" id="areaA"></div>
+<div id="passwordModal" class="modal hidden">
+  <div class="modalbox">
+    <h2>My History - Password</h2>
+    <p>Enter the password to open patient history.</p>
+    <input id="historyPassword" type="password" placeholder="Enter password">
+    <p id="passwordError" class="small" style="color:#bd3434"></p>
+    <div class="actions">
+      <button class="primary" onclick="checkHistoryPassword()">Unlock</button>
+      <button class="secondary" onclick="closeHistoryModal()">Cancel</button>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-<h3>AREA B: RISK FACTOR SEARCH</h3>
-<div class="grid" id="areaB"></div>
-</div>
-
-<div class="card">
-<button type="submit" id="submitBtn">SAVE INVESTIGATION</button>
-<button type="button" class="green" onclick="syncCases()">SYNC ONLINE</button>
-<button type="button" class="secondary" onclick="downloadCases()">EXPORT DATA JSON</button>
-<div id="message"></div>
-</div>
-
-</form>
-</div>
+<footer>NASHO HEALTH CENTER | Internal Reporting System</footer>
 
 <script>
-// CONFIGURATION
-const CONFIG={
- API_URL:"PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE",
- FACILITY:"NASHO HEALTH CENTER",
- MANAGER:"datamanager.nashohc@gmail.com"
-};
+/**************** CONFIGURATION ****************/
+const API_URL = "PASTE_YOUR_APPS_SCRIPT_WEB_APP_EXEC_URL_HERE";
+const HISTORY_PASSWORD = "Nasho123";
+const DB_NAME = "NashoCholeraDB";
+const STORE_NAME = "cases";
 
-// FORM QUESTIONS: based on supplied ANNEX 11B
-const A=[
-["1","Detection day (dd/mm/yyyy)","date","detection_day",1],
-["2","Detection place","select","detection_place",1,["Health facility","Community"]],
-["3","Patient identification number (yyyy-week-CCC-PPP-DDD-Reporting site-nnn)","text","patient_id",1],
-["4","Patient surname or last name","text","surname",1],
-["5","Patient first name(s)","text","first_names",1],
-["6","Age (years)","number","age",1],
-["7","Sex (F/M)","select","sex",1,["F","M"]],
-["8","Number of people in same household","number","household"],
-["9","Patient's residential Address","textarea","address"],
-["10","Village/Town","text","village"],
-["11","Neighbourhood","text","neighbourhood"],
-["12","District","text","district"],
-["13","Region/Province","text","province"],
-["14","Country","text","country"],
-["15","Date of onset (first symptoms)","date","onset_date"],
-["16","Clinical signs and Symptoms","textarea","symptoms"],
-["17","Was patient exposed to any known risk factor?","select","risk_factor",0,["Yes","No"]],
-["18","Water used for drinking / specify risk factors","textarea","water_risk"],
-["19","Number of doses of cholera vaccine","number","vaccine_doses"],
-["20","Date last dose was administered","date","last_vaccine"],
-["21","Laboratory related information: at least first and last cases","textarea","lab_information"],
-["22","Vibrio cholerae identified in stools?","select","vibrio",0,["Yes","No","Pending","Not done"]],
-["23","Drugs to which the vibrio strain is sensitive","textarea","sensitive"],
-["24","Drugs to which the vibrio strain is resistant","textarea","resistant"],
-["25","Outcome","select","outcome",0,["Died","Survived","Unknown"]],
-["26","Final Classification","select","classification",0,["Not a case","Suspect","Probable","Confirmed by Lab","Confirmed by epidemiological link","Pending"]],
-["27","Other Notes and Observations","textarea","notes"],
-["28","Date latest update of this record","date","latest_update"]
+/**************** FIELD DEFINITIONS ****************/
+const patientFields = [
+  ["firstName","Patient First Name","text",true],
+  ["lastName","Patient Last Name","text",true],
+  ["patientId","Patient I.D (ICD10)","text",false],
+  ["indexPatientId","Index Patient I.D (ICD10)","text",false],
+  ["dateOfBirth","Date of Birth","date",true],
+  ["ageYears","Age (Years)","number",true],
+  ["ageMonths","Age (Months)","number",false],
+  ["gender","Gender","select",true,["Male","Female","Other"]],
+  ["nationalId","National ID","text",false],
+  ["phone","Mobile Number","tel",false],
+  ["province","Province of Residence","text",true],
+  ["district","District of Residence","text",true],
+  ["sector","Sector of Residence","text",true],
+  ["village","Village of Residence","text",true],
+  ["occupation","Occupation","text",true],
+  ["fatherName","Parent/Guardian Names (Father)","text",false],
+  ["motherName","Parent/Guardian Names (Mother)","text",false],
+  ["guardianPhone","Parent/Guardian Phone Number","tel",false]
 ];
 
-const B=[
-["1","Potential vibrio vehicles: drinking water","heading",""],
-["2","Drinking water source 1","text","drink1"],
-["3","Drinking water source 2","text","drink2"],
-["4","Drinking water source 3","text","drink3"],
-["5","Drinking water source 4","text","drink4"],
-["6","Potential vibrio vehicles: non-drinking water","heading",""],
-["7","Non-drinking water source 1","text","nondrink1"],
-["8","Non-drinking water source 2","text","nondrink2"],
-["9","Non-drinking water source 3","text","nondrink3"],
-["10","Non-drinking water source 4","text","nondrink4"],
-["11","Potential vibrio vehicles: Food items","heading",""],
-["12","Food items 1","text","food1"],
-["13","Food items 2","text","food2"],
-["14","Food items 3","text","food3"],
-["15","Food items 4","text","food4"],
-["16","Food items 5","text","food5"],
-["17","Food items 6","text","food6"],
-["18","Food items 7","text","food7"],
-["19","Food items 8","text","food8"],
-["20","Bacteriology lab findings","textarea","bacteriology"],
-["21","Drinking water found infected by vibrio","select","infected_drink",0,["Yes","No","Pending","Not tested"]],
-["22","Non-drinking water found infected by vibrio","select","infected_nondrink",0,["Yes","No","Pending","Not tested"]],
-["23","Food items found infected by vibrio","textarea","infected_food"],
-["24","Looking out for Exposure to the identified hazards","heading",""],
-["25","Water used by patient for drinking: list by type","textarea","patient_water"],
-["26","Within 3 days prior to onset, did patient drink from:","heading",""],
-["27","Water source 2 (Yes/No)","select","exposure_water2",0,["Yes","No","Unknown"]],
-["28","Water source 3 (Yes/No)","select","exposure_water3",0,["Yes","No","Unknown"]],
-["29","Water source 4 (Yes/No)","select","exposure_water4",0,["Yes","No","Unknown"]],
-["30","Water source 5 (Yes/No)","select","exposure_water5",0,["Yes","No","Unknown"]],
-["31","Within 3 days prior to onset, did patient eat:","heading",""],
-["32","Food item 1 (Yes/No)","select","exposure_food1",0,["Yes","No","Unknown"]],
-["33","Food item 2 (Yes/No)","select","exposure_food2",0,["Yes","No","Unknown"]],
-["34","Food item 3 (Yes/No)","select","exposure_food3",0,["Yes","No","Unknown"]],
-["35","Food item 4 (Yes/No)","select","exposure_food4",0,["Yes","No","Unknown"]],
-["36","Food item 5 (Yes/No)","select","exposure_food5",0,["Yes","No","Unknown"]],
-["37","Within 3 days prior to onset, did patient attend any:","heading",""],
-["38","Funerals (Yes/No)","select","funeral",0,["Yes","No","Unknown"]],
-["39","Other social event (Yes/No)","select","social_event",0,["Yes","No","Unknown"]]
+const idsrFields = [
+  ["consultationDate","Date of Consultation","date",false],
+  ["disease","Disease","select",true,["Cholera","Acute watery diarrhoea","Other"]],
+  ["caseType","Type of Case (Contact/Case)?","select",true,["Case","Contact"]],
+  ["locationCoordinate","Location/Health Center Coordinate","text",false],
+  ["caseClassification","Case Classification","select",false,["Suspected","Probable","Confirmed","Not a case","Pending"]],
+  ["symptomOnset","Date of symptoms onset","date",false]
 ];
 
-// IndexedDB
-let db;
-const request=indexedDB.open("NashoCholeraDB",1);
+const annexAFields = [
+  ["a1","1. Detection day (dd/mm/yyyy)","date"],
+  ["a2","2. Detection place","select",false,["Health facility","Community"]],
+  ["a3","3. Patient identification number","text"],
+  ["a4","4. Patient surname or last name","text"],
+  ["a5","5. Patient first name(s)","text"],
+  ["a6","6. Age (years)","number"],
+  ["a7","7. Sex (F/M)","select",false,["F","M"]],
+  ["a8","8. Number of people in same household","number"],
+  ["a9","9. Patient's residential address","text"],
+  ["a10","10. Village/Town","text"],
+  ["a11","11. Neighbourhood","text"],
+  ["a12","12. District","text"],
+  ["a13","13. Region/Province","text"],
+  ["a14","14. Country","text"],
+  ["a15","15. Date of onset (first symptoms)","date"],
+  ["a16","16. Clinical signs and symptoms","textarea"],
+  ["a17","17. Exposed to any known risk factor?","select",false,["Yes","No","Unknown"]],
+  ["a18","18. Water used for drinking / specify risk factors","textarea"],
+  ["a19","19. Number of doses of cholera vaccine","number"],
+  ["a20","20. Date last vaccine dose administered","date"],
+  ["a21","21. Laboratory related information / first and last cases","textarea"],
+  ["a22","22. Vibrio cholerae identified in stools?","select",false,["Yes","No","Pending","Not tested"]],
+  ["a23","23. Drugs to which vibrio strain is sensitive","textarea"],
+  ["a24","24. Drugs to which vibrio strain is resistant","textarea"],
+  ["a25","25. Outcome","select",false,["Died","Survived","Unknown"]],
+  ["a26","26. Final classification","select",false,["Not a case","Suspect","Probable","Confirmed by Lab","Confirmed by epidemiological link","Pending"]],
+  ["a27","27. Other notes and observations","textarea"],
+  ["a28","28. Date latest update of this record","date"]
+];
 
-request.onupgradeneeded=e=>{
- const database=e.target.result;
- if(!database.objectStoreNames.contains("cases")){
-  database.createObjectStore("cases",{keyPath:"id"});
- }
-};
+const annexBFields = [
+  ["b1","1. Potential vibrio vehicles: drinking water","textarea"],
+  ["b2","2. Drinking water source 1","text"],
+  ["b3","3. Drinking water source 2","text"],
+  ["b4","4. Drinking water source 3","text"],
+  ["b5","5. Drinking water source 4","text"],
+  ["b6","6. Potential vibrio vehicles: non-drinking water","textarea"],
+  ["b7","7. Non-drinking water source 1","text"],
+  ["b8","8. Non-drinking water source 2","text"],
+  ["b9","9. Non-drinking water source 3","text"],
+  ["b10","10. Non-drinking water source 4","text"],
+  ["b11","11. Potential vibrio vehicles: Food items","textarea"],
+  ["b12","12. Food item 1","text"],
+  ["b13","13. Food item 2","text"],
+  ["b14","14. Food item 3","text"],
+  ["b15","15. Food item 4","text"],
+  ["b16","16. Food item 5","text"],
+  ["b17","17. Food item 6","text"],
+  ["b18","18. Food item 7","text"],
+  ["b19","19. Food item 8","text"],
+  ["b20","20. Bacteriology lab findings","textarea"],
+  ["b21","21. Drinking water found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
+  ["b22","22. Non-drinking water found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
+  ["b23","23. Food items found infected by vibrio?","select",false,["Yes","No","Pending","Not tested"]],
+  ["b24","24. Looking out for exposure to identified hazards","textarea"],
+  ["b25","25. Water used by patient for drinking","textarea"],
+  ["b26","26. Within 3 days before onset - Water source 1","select",false,["Yes","No","Unknown"]],
+  ["b27","27. Within 3 days before onset - Water source 2","select",false,["Yes","No","Unknown"]],
+  ["b28","28. Within 3 days before onset - Water source 3","select",false,["Yes","No","Unknown"]],
+  ["b29","29. Within 3 days before onset - Water source 4","select",false,["Yes","No","Unknown"]],
+  ["b30","30. Within 3 days before onset - Water source 5","select",false,["Yes","No","Unknown"]],
+  ["b31","31. Within 3 days before onset - Food exposure details","textarea"],
+  ["b32","32. Ate food item 1 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+  ["b33","33. Ate food item 2 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+  ["b34","34. Ate food item 3 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+  ["b35","35. Ate food item 4 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+  ["b36","36. Ate food item 5 within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+  ["b37","37. Other food exposure / details","textarea"],
+  ["b38","38. Attended funerals within 3 days before onset?","select",false,["Yes","No","Unknown"]],
+  ["b39","39. Attended other social event within 3 days before onset?","select",false,["Yes","No","Unknown"]]
+];
 
-request.onsuccess=e=>{
- db=e.target.result;
- refreshStats();
- syncCases();
-};
+/**************** FORM RENDERING ****************/
+function renderFields(containerId, fields) {
+  const container = document.getElementById(containerId);
 
-request.onerror=()=>showMessage("Unable to open local database.","error");
+  container.innerHTML = fields.map(f => {
+    const [id,label,type,required,options] = f;
+    let control = "";
 
-// RENDER FORM
-function renderFields(list,target){
- const root=document.getElementById(target);
- list.forEach(f=>{
-  if(f[2]==="heading"){
-   const h=document.createElement("div");
-   h.className="subheading";
-   h.textContent=f[0]+". "+f[1];
-   root.appendChild(h);
-   return;
-  }
+    if (type === "select") {
+      control = `<select id="${id}" name="${id}">
+        <option value="">Select...</option>
+        ${(options || []).map(o => `<option value="${escapeHtml(o)}">${escapeHtml(o)}</option>`).join("")}
+      </select>`;
+    } else if (type === "textarea") {
+      control = `<textarea id="${id}" name="${id}"></textarea>`;
+    } else {
+      control = `<input id="${id}" name="${id}" type="${type || "text"}" ${type === "number" ? 'min="0"' : ""}>`;
+    }
 
-  const box=document.createElement("div");
-  box.className="field"+(f[2]==="textarea"?" full":"");
-
-  const label=document.createElement("label");
-  label.textContent=f[0]+". "+f[1]+(f[4]?" *":"");
-  box.appendChild(label);
-
-  let el;
-  if(f[2]==="textarea"){
-   el=document.createElement("textarea");
-  }else if(f[2]==="select"){
-   el=document.createElement("select");
-   const blank=new Option("-- Select --","");
-   el.add(blank);
-   f[5].forEach(x=>el.add(new Option(x,x)));
-  }else{
-   el=document.createElement("input");
-   el.type=f[2];
-   if(f[2]==="number")el.min="0";
-  }
-
-  el.name=f[3];
-  if(f[4])el.required=true;
-  box.appendChild(el);
-  root.appendChild(box);
- });
+    return `<div class="field ${type === "textarea" ? "full" : ""}">
+      <label for="${id}">${escapeHtml(label)} ${required ? "*" : ""}</label>
+      ${control}
+    </div>`;
+  }).join("");
 }
 
-renderFields(A,"areaA");
-renderFields(B,"areaB");
+renderFields("patientFields", patientFields);
+renderFields("idsrFields", idsrFields);
+renderFields("annexAFields", annexAFields);
+renderFields("annexBFields", annexBFields);
 
-// DATABASE FUNCTIONS
-function transaction(mode,callback){
- return db.transaction("cases",mode).objectStore("cases");
+/**************** COMMON FIELD AUTO-FILL ****************/
+function value(id) {
+  const el = document.getElementById(id);
+  return el ? el.value.trim() : "";
 }
 
-function getAll(){
- return new Promise((resolve,reject)=>{
-  const req=transaction("readonly").getAll();
-  req.onsuccess=()=>resolve(req.result||[]);
-  req.onerror=()=>reject(req.error);
- });
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el && !el.value) el.value = val || "";
 }
 
-function saveLocal(data){
- return new Promise((resolve,reject)=>{
-  const req=transaction("readwrite").put(data);
-  req.onsuccess=()=>resolve();
-  req.onerror=()=>reject(req.error);
- });
-}
+function linkSharedFields() {
+  const links = {
+    firstName:"a5",
+    lastName:"a4",
+    patientId:"a3",
+    ageYears:"a6",
+    dateOfBirth:"",
+    gender:"a7",
+    province:"a13",
+    district:"a12",
+    village:"a10",
+    symptomOnset:"a15"
+  };
 
-async function refreshStats(){
- if(!db)return;
- const cases=await getAll();
- document.getElementById("total").textContent=cases.length;
- document.getElementById("pending").textContent=
- cases.filter(x=>!x.synced).length;
- updateConnection();
-}
+  Object.entries(links).forEach(([source,target]) => {
+    const el = document.getElementById(source);
+    if (!el || !target) return;
 
-function updateConnection(){
- document.getElementById("connection").textContent=
- navigator.onLine?"ONLINE":"OFFLINE";
-}
-
-window.addEventListener("online",()=>{
- updateConnection();
- syncCases();
-});
-window.addEventListener("offline",updateConnection);
-
-// SUBMIT FORM
-document.getElementById("caseForm").addEventListener("submit",async e=>{
- e.preventDefault();
- if(!db)return showMessage("Database is still loading.","error");
-
- const data=Object.fromEntries(new FormData(e.target).entries());
- const id="CHOL-"+Date.now()+"-"+Math.floor(Math.random()*10000);
-
- const record={
-  id,
-  facility:CONFIG.FACILITY,
-  submittedAt:new Date().toISOString(),
-  answers:data,
-  synced:false
- };
-
- try{
-  await saveLocal(record);
-  await refreshStats();
-  createPDF(record);
-  showMessage("Saved successfully. Case ID: "+id+
-  ". PDF generated. "+(navigator.onLine?" Syncing...":"Stored offline until internet returns."));
-  e.target.reset();
-  if(navigator.onLine)syncCases();
- }catch(err){
-  showMessage("Could not save: "+err.message,"error");
- }
-});
-
-// PDF
-function createPDF(record){
- if(!window.jspdf){
-  showMessage("PDF library unavailable. Reconnect to internet to load it.","error");
-  return;
- }
-
- const {jsPDF}=window.jspdf;
- const doc=new jsPDF({orientation:"portrait"});
- const ans=record.answers;
-
- doc.setFontSize(14);
- doc.text("ANNEX 11B: Cholera Case-Based Investigation Form",105,15,{align:"center"});
- doc.setFontSize(10);
- doc.text(CONFIG.FACILITY,105,22,{align:"center"});
- doc.text("Document ID: "+record.id,14,31);
- doc.text("Submitted: "+new Date(record.submittedAt).toLocaleString(),14,37);
-
- function table(title,fields,startY){
-  doc.setFontSize(12);
-  doc.text(title,14,startY);
-  const rows=fields.filter(f=>f[2]!=="heading").map(f=>[
-   f[0],f[1],ans[f[3]]||"Not provided"
-  ]);
-  doc.autoTable({
-   startY:startY+5,
-   head:[["No.","Variables / Questions","Answers"]],
-   body:rows,
-   theme:"grid",
-   styles:{fontSize:7,cellPadding:2,overflow:"linebreak"},
-   headStyles:{fillColor:[7,84,155]}
+    el.addEventListener("input", () => {
+      let v = el.value;
+      if (source === "gender") v = v === "Male" ? "M" : v === "Female" ? "F" : "";
+      setValue(target,v);
+    });
   });
- }
 
- table("AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION",A,45);
- doc.addPage();
- table("AREA B: RISK FACTOR SEARCH",B,18);
+  document.getElementById("firstName").addEventListener("input", updatePatientName);
+  document.getElementById("lastName").addEventListener("input", updatePatientName);
+}
+function updatePatientName() {}
+linkSharedFields();
 
- doc.save(record.id+".pdf");
+/**************** INDEXED DB ****************/
+let db;
+
+function openDatabase() {
+  return new Promise((resolve,reject) => {
+    const request = indexedDB.open(DB_NAME,1);
+
+    request.onupgradeneeded = e => {
+      const database = e.target.result;
+      if (!database.objectStoreNames.contains(STORE_NAME)) {
+        database.createObjectStore(STORE_NAME,{keyPath:"caseId"});
+      }
+    };
+
+    request.onsuccess = e => {
+      db = e.target.result;
+      resolve(db);
+    };
+
+    request.onerror = () => reject(request.error);
+  });
 }
 
-// SYNCHRONIZATION
-async function syncCases(){
- if(!db || !navigator.onLine)return;
- if(!CONFIG.API_URL || CONFIG.API_URL.includes("PASTE_YOUR")){
-  updateConnection();
-  return;
- }
+function saveLocal(record) {
+  return new Promise((resolve,reject) => {
+    const tx = db.transaction(STORE_NAME,"readwrite");
+    tx.objectStore(STORE_NAME).put(record);
+    tx.oncomplete = () => resolve(true);
+    tx.onerror = () => reject(tx.error);
+  });
+}
 
- const cases=await getAll();
- for(const record of cases){
-  if(record.synced)continue;
-  try{
-   const response=await fetch(CONFIG.API_URL,{
-    method:"POST",
-    headers:{"Content-Type":"text/plain;charset=utf-8"},
-    body:JSON.stringify(record)
-   });
-   const result=await response.json();
-   if(result.success){
-    record.synced=true;
-    await saveLocal(record);
-   }
-  }catch(err){
-   console.error("Sync failed:",err);
-   break;
+function getAllCases() {
+  return new Promise((resolve,reject) => {
+    const tx = db.transaction(STORE_NAME,"readonly");
+    const request = tx.objectStore(STORE_NAME).getAll();
+    request.onsuccess = () => resolve(request.result || []);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+/**************** FORM DATA ****************/
+function collectFields(fields) {
+  const result = {};
+  fields.forEach(f => result[f[0]] = value(f[0]));
+  return result;
+}
+
+function collectRecord() {
+  const patient = collectFields(patientFields);
+  const idsr = collectFields(idsrFields);
+  const annexA = collectFields(annexAFields);
+  const annexB = collectFields(annexBFields);
+
+  // Ensure the shared identity fields are consistent.
+  annexA.a4 = patient.lastName;
+  annexA.a5 = patient.firstName;
+  annexA.a3 = patient.patientId;
+  annexA.a6 = patient.ageYears;
+  annexA.a7 = patient.gender === "Male" ? "M" : patient.gender === "Female" ? "F" : "";
+  annexA.a10 = patient.village;
+  annexA.a12 = patient.district;
+  annexA.a13 = patient.province;
+  annexA.a15 = idsr.symptomOnset;
+
+  return {
+    patient,
+    idsr,
+    annexA,
+    annexB
+  };
+}
+
+/**************** PDF GENERATION ****************/
+function makePdf(title, sections, patientName, caseId) {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    throw new Error("PDF library is not loaded. Connect to internet and reload the system.");
   }
- }
- await refreshStats();
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
+
+  doc.setFontSize(15);
+  doc.text("NASHO HEALTH CENTER",14,15);
+
+  doc.setFontSize(12);
+  doc.text(title,14,23);
+
+  doc.setFontSize(9);
+  doc.text("Patient: " + patientName,14,31);
+  doc.text("Case ID: " + caseId,14,37);
+  doc.text("Generated: " + new Date().toLocaleString(),14,43);
+
+  let y = 50;
+
+  sections.forEach(section => {
+    const rows = section.fields.map(f => [
+      f[1],
+      section.data[f[0]] || ""
+    ]);
+
+    doc.autoTable({
+      startY:y,
+      head:[[section.title,"Patient Information"]],
+      body:rows,
+      theme:"grid",
+      styles:{fontSize:8,cellPadding:2,overflow:"linebreak"},
+      headStyles:{fillColor:[18,59,93]},
+      columnStyles:{0:{cellWidth:85},1:{cellWidth:95}},
+      margin:{left:14,right:14}
+    });
+
+    y = doc.lastAutoTable.finalY + 7;
+    if (y > 250) y = 20;
+  });
+
+  doc.setFontSize(8);
+  doc.text("NASHO HEALTH CENTER - Confidential Patient Report",14,287);
+
+  return doc.output("datauristring");
 }
 
-function downloadCases(){
- getAll().then(cases=>{
-  const blob=new Blob([JSON.stringify(cases,null,2)],{type:"application/json"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="NASHO_CHOLERA_BACKUP.json";
+function cleanFilename(name) {
+  return String(name || "PATIENT")
+    .trim()
+    .replace(/[\\/:*?"<>|]/g,"")
+    .replace(/\s+/g,"_")
+    .toUpperCase();
+}
+
+function dataUriToBase64(dataUri) {
+  return dataUri.split(",")[1];
+}
+
+function downloadPdf(base64, filename) {
+  const blob = new Blob(
+    [Uint8Array.from(atob(base64),c => c.charCodeAt(0))],
+    {type:"application/pdf"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
   a.click();
-  URL.revokeObjectURL(a.href);
- });
+  setTimeout(() => URL.revokeObjectURL(url),30000);
 }
 
-function showMessage(message,type="success"){
- const box=document.getElementById("message");
- box.textContent=message;
- box.style.background=type==="error"?"#fee2e2":"#dcfce7";
- box.style.color=type==="error"?"#991b1b":"#166534";
+function openPdf(base64) {
+  const blob = new Blob(
+    [Uint8Array.from(atob(base64),c => c.charCodeAt(0))],
+    {type:"application/pdf"}
+  );
+
+  const url = URL.createObjectURL(blob);
+  window.open(url,"_blank");
 }
+
+/**************** SUBMIT CASE ****************/
+document.getElementById("caseForm").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  try {
+    const record = collectRecord();
+
+    if (!record.patient.firstName || !record.patient.lastName) {
+      showMessage("Patient first name and last name are required.","bad");
+      return;
+    }
+
+    const patientName = (
+      record.patient.firstName + " " + record.patient.lastName
+    ).trim();
+
+    const caseId = "NASHO-" + Date.now();
+
+    const annexPdf = makePdf(
+      "ANNEX 11B: CHOLERA CASE-BASED INVESTIGATION FORM",
+      [
+        {title:"AREA A: PATIENT AND CLINICAL LABORATORY INFORMATION",fields:annexAFields,data:record.annexA},
+        {title:"AREA B: RISK FACTOR SEARCH",fields:annexBFields,data:record.annexB}
+      ],
+      patientName,
+      caseId
+    );
+
+    const idsrPdf = makePdf(
+      "IDSR IMMEDIATE REPORT FORM",
+      [
+        {title:"PATIENT IDENTIFICATION",fields:patientFields,data:record.patient},
+        {title:"IDSR IMMEDIATE REPORT",fields:idsrFields,data:record.idsr}
+      ],
+      patientName,
+      caseId
+    );
+
+    const item = {
+      caseId,
+      patientName,
+      patientId:record.patient.patientId,
+      disease:record.idsr.disease,
+      consultationDate:record.idsr.consultationDate,
+      dateOfOnset:record.idsr.symptomOnset,
+      gender:record.patient.gender,
+      phone:record.patient.phone,
+      district:record.patient.district,
+      sector:record.patient.sector,
+      village:record.patient.village,
+      status:"Pending synchronization",
+      createdAt:new Date().toISOString(),
+      record,
+      annexPdf:dataUriToBase64(annexPdf),
+      idsrPdf:dataUriToBase64(idsrPdf),
+      annexFilename:cleanFilename(patientName)+"_ANNEX11B.pdf",
+      idsrFilename:cleanFilename(patientName)+"_IDSR.pdf"
+    };
+
+    await saveLocal(item);
+
+    downloadPdf(item.annexPdf,item.annexFilename);
+    downloadPdf(item.idsrPdf,item.idsrFilename);
+
+    showMessage(
+      "Patient saved locally. Both PDFs have been generated and downloaded. Synchronization will be attempted.",
+      "good"
+    );
+
+    this.reset();
+    await syncCases();
+
+  } catch(err) {
+    showMessage("Error: " + err.message,"bad");
+  }
+});
+
+/**************** ONLINE SYNCHRONIZATION ****************/
+async function syncCases() {
+  if (!navigator.onLine) {
+    showMessage("You are offline. Reports remain safely stored on this device.","bad");
+    return;
+  }
+
+  if (!API_URL || API_URL.includes("PASTE_YOUR")) {
+    showMessage("Please add your Apps Script Web App URL in API_URL.","bad");
+    return;
+  }
+
+  try {
+    const cases = await getAllCases();
+    const pending = cases.filter(c => c.status !== "Synchronized");
+
+    if (!pending.length) {
+      showMessage("No pending reports to synchronize.","good");
+      return;
+    }
+
+    for (const item of pending) {
+      const payload = {
+        action:"submitCase",
+        caseId:item.caseId,
+        patientName:item.patientName,
+        patientId:item.patientId,
+        disease:item.disease,
+        consultationDate:item.consultationDate,
+        dateOfOnset:item.dateOfOnset,
+        gender:item.gender,
+        phone:item.phone,
+        district:item.district,
+        sector:item.sector,
+        village:item.village,
+        status:"Submitted",
+        annexPdf:item.annexPdf,
+        idsrPdf:item.idsrPdf,
+        record:item.record
+      };
+
+      const response = await fetch(API_URL,{
+        method:"POST",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},
+        body:JSON.stringify(payload),
+        redirect:"follow"
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        item.status = "Synchronized";
+        item.syncedAt = new Date().toISOString();
+        await saveLocal(item);
+      } else {
+        item.status = "Sync error: " + (result.message || "Unknown error");
+        await saveLocal(item);
+      }
+    }
+
+    renderHistory();
+    showMessage("Synchronization process completed. Check report status in My History.","good");
+
+  } catch(err) {
+    showMessage(
+      "Synchronization could not be confirmed. Reports remain stored locally. " + err.message,
+      "bad"
+    );
+  }
+}
+
+window.addEventListener("online",syncCases);
+
+/**************** MY HISTORY ****************/
+function openHistory() {
+  document.getElementById("passwordModal").classList.remove("hidden");
+  document.getElementById("historyPassword").value = "";
+  document.getElementById("passwordError").textContent = "";
+  document.getElementById("historyPassword").focus();
+}
+
+function closeHistoryModal() {
+  document.getElementById("passwordModal").classList.add("hidden");
+}
+
+function checkHistoryPassword() {
+  const password = document.getElementById("historyPassword").value;
+
+  if (password !== HISTORY_PASSWORD) {
+    document.getElementById("passwordError").textContent = "Incorrect password.";
+    return;
+  }
+
+  closeHistoryModal();
+  showPage("historyPage");
+  renderHistory();
+}
+
+async function renderHistory() {
+  const list = document.getElementById("historyList");
+  const search = (document.getElementById("historySearch").value || "").toLowerCase();
+
+  let cases = await getAllCases();
+  cases.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  cases = cases.filter(c =>
+    (c.patientName || "").toLowerCase().includes(search) ||
+    (c.caseId || "").toLowerCase().includes(search)
+  );
+
+  if (!cases.length) {
+    list.innerHTML = "<p>No patient reports found.</p>";
+    return;
+  }
+
+  list.innerHTML = `
+    <table>
+      <thead>
+        <tr>
+          <th>Patient</th>
+          <th>Case ID</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>PDF Reports</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${cases.map(c => `
+          <tr>
+            <td><b>${escapeHtml(c.patientName)}</b></td>
+            <td>${escapeHtml(c.caseId)}</td>
+            <td>${new Date(c.createdAt).toLocaleDateString()}</td>
+            <td>${escapeHtml(c.status)}</td>
+            <td>
+              <div class="actions">
+                <button class="primary" onclick="historyPdf('${c.caseId}','annex')">ANNEX 11B</button>
+                <button class="secondary" onclick="historyPdf('${c.caseId}','idsr')">IDSR</button>
+              </div>
+            </td>
+          </tr>
+        `).join("")}
+      </tbody>
+    </table>
+  `;
+}
+
+async function historyPdf(caseId,type) {
+  const cases = await getAllCases();
+  const item = cases.find(c => c.caseId === caseId);
+  if (!item) return;
+
+  if (type === "annex") {
+    downloadPdf(item.annexPdf,item.annexFilename);
+  } else {
+    downloadPdf(item.idsrPdf,item.idsrFilename);
+  }
+}
+
+function showPage(id) {
+  document.getElementById("formPage").classList.add("hidden");
+  document.getElementById("historyPage").classList.add("hidden");
+  document.getElementById(id).classList.remove("hidden");
+}
+
+function showMessage(message,type) {
+  const box = document.getElementById("message");
+  box.textContent = message;
+  box.className = "status " + (type || "");
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;",
+    "<":"&lt;",
+    ">":"&gt;",
+    '"':"&quot;",
+    "'":"&#39;"
+  })[ch]);
+}
+
+/**************** STARTUP ****************/
+(async function startSystem() {
+  try {
+    await openDatabase();
+    showMessage("System ready. Local storage is active.","good");
+    if (navigator.onLine) syncCases();
+  } catch(err) {
+    showMessage("Local database could not be opened: " + err.message,"bad");
+  }
+})();
 </script>
 </body>
 </html>
