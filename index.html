@@ -206,7 +206,7 @@ let adminMode=false;
 const patientFields=[
 ["healthFacility","Health Facility Name","text",true],
 ["firstName","Patient First Name","text",true],
- ["lastName","Patient Last Name","text",true],
+["lastName","Patient Last Name","text",true],
 ["patientId","Patient I.D (ICD10)","text",false],
 ["indexPatientId","Index Patient I.D (ICD10)","text",false],
 ["dateOfBirth","Date of Birth","date",true],
@@ -222,7 +222,9 @@ const patientFields=[
 ["occupation","Occupation","text",true],
 ["fatherName","Parent/Guardian Names (Father)","text",false],
 ["motherName","Parent/Guardian Names (Mother)","text",false],
-["guardianPhone","Parent/Guardian Phone Number","tel",false]
+["guardianPhone","Parent/Guardian Phone Number","tel",false],
+["practionerName","Paractioner Names ","text",true],
+["practionerPhone","Paractioner Phone Number","tel",true]
 ];
 
 /**************** IDSR FIELDS ****************/
@@ -254,8 +256,8 @@ const annexAFields=[
 ["a13","13. Region/Province","text",false],
 ["a14","14. Country","text",true],
 ["a15","15. Date of onset (first symptoms)","date",true],
-["a16","16. Clinical signs and symptoms","textarea",true],
-["a16","16. Treatments given ","textarea",true],
+["a16","16.a. Clinical signs and symptoms","textarea",true],
+["a16","16.b. Treatments given ","textarea",true],
 ["a17","17. Exposed to any known risk factor?","select",false,["Yes","No","Unknown"]],
 ["a18","18. Water used for drinking / specify risk factors","textarea",false],
 ["a19","19. Number of doses of cholera vaccine","number",false],
