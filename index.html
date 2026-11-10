@@ -204,8 +204,9 @@ let adminMode=false;
 /**************** PATIENT FIELDS ****************/
 
 const patientFields=[
+["healthFacility","Health Facility Name","text",true],
 ["firstName","Patient First Name","text",true],
-["lastName","Patient Last Name","text",true],
+ ["lastName","Patient Last Name","text",true],
 ["patientId","Patient I.D (ICD10)","text",false],
 ["indexPatientId","Index Patient I.D (ICD10)","text",false],
 ["dateOfBirth","Date of Birth","date",true],
@@ -254,6 +255,7 @@ const annexAFields=[
 ["a14","14. Country","text",true],
 ["a15","15. Date of onset (first symptoms)","date",true],
 ["a16","16. Clinical signs and symptoms","textarea",true],
+["a16","16. Treatments given ","textarea",true],
 ["a17","17. Exposed to any known risk factor?","select",false,["Yes","No","Unknown"]],
 ["a18","18. Water used for drinking / specify risk factors","textarea",false],
 ["a19","19. Number of doses of cholera vaccine","number",false],
